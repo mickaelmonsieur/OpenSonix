@@ -27,3 +27,4 @@ CLAUDE.md
 AGENTS.md
 GEMINI.md
 .github/copilot-instructions.md
+.claude/settings.local.json

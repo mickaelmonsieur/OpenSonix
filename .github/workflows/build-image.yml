@@ -35,11 +35,9 @@ jobs:
 
       # ── 3. Clone pi-gen ────────────────────────────────────────────────────
       - name: Clone pi-gen
-        run: |
-          git clone --depth=1 https://github.com/RPi-Distro/pi-gen.git
+        run: git clone --depth=1 https://github.com/RPi-Distro/pi-gen.git
 
       # ── 4. Assemble stage (copy sources into files/, then copy stage into pi-gen)
-      #       Symlinks are avoided because Docker bind-mount does not follow them.
       - name: Prepare pi-gen stage
         run: |
           mkdir -p image/stage-opensonix/files
@@ -71,26 +69,35 @@ jobs:
             echo 'STAGE_LIST="stage0 stage1 stage-opensonix"'
           } > pi-gen/config
 
-      # ── 6. Free up disk space before the build (~14 GB free on ubuntu-latest,
-      #       pi-gen work dir can reach 5–6 GB) ────────────────────────────────
+      # ── 6. Free up disk space ──────────────────────────────────────────────
       - name: Free disk space
         run: |
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
           df -h
 
-      # ── 7. Enable ARM emulation (required by pi-gen Docker build on x86_64) ──
-      - name: Enable QEMU ARM emulation
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm
+      # ── 7. Install pi-gen build dependencies (run build.sh directly, no Docker)
+      #       build-docker.sh wraps everything in an i386 container which makes
+      #       installing qemu-arm inside it painful. Running build.sh directly on
+      #       the ubuntu-latest runner with qemu-user-static is much cleaner.
+      - name: Install pi-gen build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            coreutils quilt parted qemu-user-static debootstrap zerofree \
+            dosfstools libarchive-tools libcap2-bin grep rsync xz-utils file \
+            git curl bc gpg pigz xxd arch-test bmap-tools
+          # pi-gen checks for 'qemu-arm'; qemu-user-static provides 'qemu-arm-static'
+          sudo ln -sf /usr/bin/qemu-arm-static /usr/local/bin/qemu-arm
 
-      # ── 8. Build image inside Docker ───────────────────────────────────────
+      # ── 8. Build image ─────────────────────────────────────────────────────
       - name: Build image
         run: |
           cd pi-gen
-          sudo ./build-docker.sh
+          sudo ./build.sh
+        env:
+          DEBIAN_FRONTEND: noninteractive
 
-      # ── 8. Locate and compress image ───────────────────────────────────────
+      # ── 9. Locate and compress image ───────────────────────────────────────
       - name: Locate image
         run: |
           IMAGE=$(find pi-gen/deploy -maxdepth 1 \( -name "*.img.xz" -o -name "*.img" \) | sort | tail -1)
@@ -102,7 +109,7 @@ jobs:
           echo "IMAGE_PATH=${IMAGE}"      >> "$GITHUB_ENV"
           echo "IMAGE_NAME=$(basename "${IMAGE}")" >> "$GITHUB_ENV"
 
-      # ── 9. Create GitHub Release and attach image ──────────────────────────
+      # ── 10. Create GitHub Release and attach image ─────────────────────────
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
