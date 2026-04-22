@@ -1,0 +1,264 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 14px;
+  background: #efefef;
+  color: #222;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────────────── */
+
+.navbar {
+  background: #1c3557;
+  color: #fff;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 1.25rem;
+  gap: 0;
+}
+
+.navbar-brand {
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: .03em;
+  color: #fff;
+  text-decoration: none;
+  margin-right: 2rem;
+}
+
+.navbar-links {
+  display: flex;
+  gap: 0;
+  flex: 1;
+}
+
+.navbar-links a {
+  color: #c8d8ec;
+  text-decoration: none;
+  padding: 0 .9rem;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  font-size: .9rem;
+  border-right: 1px solid #2a4a6e;
+}
+
+.navbar-links a:first-child { border-left: 1px solid #2a4a6e; }
+
+.navbar-links a:hover,
+.navbar-links a.active { background: #15293f; color: #fff; }
+
+.navbar-logout {
+  margin-left: auto;
+  background: none;
+  border: 1px solid #4a6a8e;
+  color: #c8d8ec;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: .85rem;
+}
+
+.navbar-logout:hover { background: #15293f; color: #fff; }
+
+/* ── Page layout ─────────────────────────────────────────────────────────── */
+
+.page {
+  padding: 1.25rem;
+  max-width: 860px;
+}
+
+.page-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #1c3557;
+  padding-bottom: .4rem;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+
+.card {
+  background: #fff;
+  border: 1px solid #c4c4c4;
+  margin-bottom: .9rem;
+}
+
+.card-header {
+  background: #e6e6e6;
+  border-bottom: 1px solid #c4c4c4;
+  padding: .35rem .75rem;
+  font-weight: 600;
+  font-size: .8rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: #444;
+}
+
+.card-body { padding: .75rem; }
+
+/* ── Status table ────────────────────────────────────────────────────────── */
+
+.status-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.status-table td {
+  padding: .35rem .5rem;
+  border-bottom: 1px solid #ebebeb;
+  vertical-align: middle;
+}
+
+.status-table td:first-child {
+  color: #666;
+  width: 180px;
+  white-space: nowrap;
+}
+
+.status-table tr:last-child td { border-bottom: none; }
+
+/* ── Badges ─────────────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-block;
+  padding: 1px 7px;
+  font-size: .8rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.badge-xl {
+  display: inline-block;
+  padding: 6px 20px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: .05em;
+  border: 2px solid transparent;
+}
+
+.green  { background: #d4edda; color: #155724; border-color: #b1dfbb; }
+.blue   { background: #cce5ff; color: #004085; border-color: #b8daff; }
+.red    { background: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+.grey   { background: #e2e3e5; color: #383d41; border-color: #d6d8db; }
+.yellow { background: #fff3cd; color: #856404; border-color: #ffeeba; }
+.orange { background: #ffe5cc; color: #7a3800; border-color: #ffcc99; }
+
+/* ── VU meter ────────────────────────────────────────────────────────────── */
+
+.vu-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .4rem;
+}
+
+.vu-label {
+  width: 22px;
+  font-size: .75rem;
+  font-weight: 700;
+  color: #555;
+  font-family: monospace;
+}
+
+.vu-track {
+  flex: 1;
+  height: 14px;
+  background: #ddd;
+  border: 1px solid #bbb;
+}
+
+.vu-bar {
+  height: 100%;
+  background: #2d8a2d;
+  transition: width .12s linear;
+  min-width: 0;
+}
+
+.vu-bar.rx { background: #1a6fa8; }
+
+.vu-pct {
+  width: 32px;
+  text-align: right;
+  font-size: .75rem;
+  color: #555;
+  font-family: monospace;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+
+.btn {
+  padding: 5px 16px;
+  font-size: .88rem;
+  cursor: pointer;
+  border: 1px solid #999;
+  background: #e8e8e8;
+  color: #222;
+}
+
+.btn:hover:not(:disabled) { background: #d8d8d8; }
+
+.btn:disabled { opacity: .5; cursor: default; }
+
+.btn-primary { background: #1c3557; color: #fff; border-color: #1c3557; }
+.btn-primary:hover:not(:disabled) { background: #15293f; }
+
+.btn-danger  { background: #c0392b; color: #fff; border-color: #a93226; }
+.btn-danger:hover:not(:disabled)  { background: #a93226; }
+
+.btn-group { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+/* ── Forms ───────────────────────────────────────────────────────────────── */
+
+.form-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: .6rem;
+}
+
+.form-row label {
+  width: 180px;
+  font-size: .88rem;
+  color: #444;
+  flex-shrink: 0;
+}
+
+.form-row input,
+.form-row select {
+  padding: 4px 6px;
+  border: 1px solid #aaa;
+  font-size: .88rem;
+  width: 240px;
+}
+
+.form-error { color: #c0392b; font-size: .85rem; margin-top: .5rem; }
+
+/* ── Login ───────────────────────────────────────────────────────────────── */
+
+.login-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.login-box {
+  background: #fff;
+  border: 1px solid #c4c4c4;
+  padding: 1.5rem;
+  width: 320px;
+}
+
+.login-box h1 {
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid #1c3557;
+  padding-bottom: .4rem;
+}
+
+.login-box .form-row { flex-direction: column; align-items: flex-start; gap: .25rem; }
+.login-box .form-row label { width: auto; }
+.login-box .form-row input { width: 100%; }
+
+.login-box .btn { width: 100%; margin-top: .5rem; }

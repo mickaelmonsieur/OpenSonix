@@ -1,0 +1,19 @@
+[Unit]
+Description=baresip SIP client
+After=network.target sound.target
+Wants=sound.target
+
+[Service]
+User=baresip
+SupplementaryGroups=audio
+ExecStart=/usr/bin/baresip -f /etc/baresip
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=always
+RestartSec=3
+TimeoutStartSec=30
+
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

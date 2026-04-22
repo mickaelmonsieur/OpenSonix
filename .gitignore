@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build output
+ui/dist/
+
+# SQLite database (created at runtime)
+*.db
+*.db-wal
+*.db-shm
+
+# pi-gen stage files/ dir (populated by CI, not committed)
+image/stage-opensonix/files/
+
+# OS
+.DS_Store
+
+# Env & secrets
+.env
+
+# Editors & AI assistants
+.vscode/
+.idea/
+.cursor/
+.aider*
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.github/copilot-instructions.md
