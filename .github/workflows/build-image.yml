@@ -78,7 +78,13 @@ jobs:
           sudo rm -rf /usr/local/lib/android /opt/ghc /usr/share/dotnet
           df -h
 
-      # ── 7. Build image inside Docker ───────────────────────────────────────
+      # ── 7. Enable ARM emulation (required by pi-gen Docker build on x86_64) ──
+      - name: Enable QEMU ARM emulation
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
+      # ── 8. Build image inside Docker ───────────────────────────────────────
       - name: Build image
         run: |
           cd pi-gen
