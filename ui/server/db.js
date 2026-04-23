@@ -1,5 +1,5 @@
 import Database      from 'better-sqlite3'
-import bcrypt         from 'bcrypt'
+import bcrypt         from 'bcryptjs'
 import { randomBytes } from 'node:crypto'
 import { mkdirSync }  from 'node:fs'
 import { dirname, resolve } from 'node:path'

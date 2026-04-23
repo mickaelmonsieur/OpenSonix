@@ -5,5 +5,7 @@ apt-get install -y --no-install-recommends \
     baresip \
     alsa-utils \
     nodejs \
-    npm
+    npm \
+    build-essential \
+    python3
 EOF

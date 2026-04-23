@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcrypt'
+import bcrypt from 'bcryptjs'
 
 const ACCESS_SECRET  = process.env.JWT_SECRET         ?? 'dev-secret-change-in-production'
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET ?? ACCESS_SECRET + '-refresh'
