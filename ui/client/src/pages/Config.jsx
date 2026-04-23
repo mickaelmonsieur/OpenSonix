@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useAuth } from '../App.jsx'
+import { useAuth }                          from '../App.jsx'
+import { useI18n }                          from '../i18n/index.jsx'
 
 const VOLUMES = Array.from({ length: 21 }, (_, i) => i * 5)
 
@@ -12,12 +13,12 @@ const BITRATES = [
   { value: '256000', label: '256 kbps' },
 ]
 
-function DeviceSelect({ value, options, onChange }) {
+function DeviceSelect({ value, options, onChange, placeholder }) {
   const list = options.includes(value) ? options : [value, ...options].filter(Boolean)
   return (
     <select value={value} onChange={e => onChange(e.target.value)}>
       {list.length === 0
-        ? <option value="">— aucun périphérique détecté —</option>
+        ? <option value="">{placeholder}</option>
         : list.map(d => <option key={d} value={d}>{d}</option>)}
     </select>
   )
@@ -36,8 +37,7 @@ function Banner({ ok, message, onDismiss }) {
   )
 }
 
-// Monospaced credential display with a one-click copy button
-function CredField({ label, value }) {
+function CredField({ label, value, copyLabel, copiedLabel }) {
   const [copied, setCopied] = useState(false)
   const copy = () => {
     navigator.clipboard?.writeText(value).then(() => {
@@ -51,8 +51,8 @@ function CredField({ label, value }) {
       <code style={{ fontFamily: 'monospace', fontSize: '.85rem', letterSpacing: '.04em', padding: '2px 6px', background: '#f0f0f0', border: '1px solid #ccc', userSelect: 'all' }}>
         {value ?? '…'}
       </code>
-      <button className="btn" style={{ padding: '2px 8px', fontSize: '.78rem', marginLeft: '.4rem' }} onClick={copy} title="Copier">
-        {copied ? '✓' : 'Copier'}
+      <button className="btn" style={{ padding: '2px 8px', fontSize: '.78rem', marginLeft: '.4rem' }} onClick={copy} title={copyLabel}>
+        {copied ? copiedLabel : copyLabel}
       </button>
     </div>
   )
@@ -60,17 +60,15 @@ function CredField({ label, value }) {
 
 export default function Config() {
   const { apiFetch } = useAuth()
+  const { t } = useI18n()
 
-  // ── config form (keys saved via POST /api/config) ─────────────────────────
   const [original, setOriginal] = useState(null)
   const [form,     setForm]     = useState(null)
   const [devices,  setDevices]  = useState({ playback: [], capture: [] })
 
-  // ── SIP remote form (saved via POST /api/config/sip) ─────────────────────
   const [sipOrig,  setSipOrig]  = useState(null)
   const [sipForm,  setSipForm]  = useState({ registrar: '', remote_user: '', remote_password: '' })
 
-  // ── local SIP credentials (read-only, updated after rotate) ──────────────
   const [sipCreds, setSipCreds] = useState({ username: null, password: null })
   const [localIp,  setLocalIp]  = useState(null)
 
@@ -95,7 +93,7 @@ export default function Config() {
         setSipCreds({ username: sip?.username ?? null, password: sip?.password ?? null })
         setLocalIp(localIp ?? null)
       })
-      .catch(() => setBanner({ ok: false, message: 'Impossible de charger la configuration.' }))
+      .catch(() => setBanner({ ok: false, message: t('config.load_error') }))
   }, [apiFetch])
 
   useEffect(() => { load() }, [load])
@@ -116,11 +114,10 @@ export default function Config() {
   const hasChanges = changedConfigKeys.length > 0 || sipChanged
 
   const save = async () => {
-    if (!hasChanges) { setBanner({ ok: true, message: 'Aucune modification.' }); return }
+    if (!hasChanges) { setBanner({ ok: true, message: t('config.no_change') }); return }
     setSaving(true)
     setBanner(null)
     try {
-      // Save changed config keys sequentially
       for (const key of changedConfigKeys) {
         const res = await apiFetch('/api/config', {
           method: 'POST',
@@ -128,12 +125,11 @@ export default function Config() {
         })
         if (!res.ok) {
           const j = await res.json().catch(() => ({}))
-          throw new Error(j.error ?? `Erreur sur "${key}" (${res.status})`)
+          throw new Error(j.error ?? `Error on "${key}" (${res.status})`)
         }
       }
       setOriginal({ ...form })
 
-      // Save SIP remote data if changed
       if (sipChanged) {
         const res = await apiFetch('/api/config/sip', {
           method: 'POST',
@@ -141,12 +137,12 @@ export default function Config() {
         })
         if (!res.ok) {
           const j = await res.json().catch(() => ({}))
-          throw new Error(j.error ?? `Erreur liaison (${res.status})`)
+          throw new Error(j.error ?? `Link error (${res.status})`)
         }
         setSipOrig({ ...sipForm })
       }
 
-      setBanner({ ok: true, message: 'Configuration sauvegardée.' })
+      setBanner({ ok: true, message: t('config.saved_ok') })
     } catch (e) {
       setBanner({ ok: false, message: e.message })
     } finally {
@@ -161,15 +157,15 @@ export default function Config() {
   }
 
   const rotate = async () => {
-    if (!confirm('Régénérer les identifiants ?\n\nToute paire existante devra être reconfigurée avec les nouvelles valeurs.')) return
+    if (!confirm(t('config.rotate_confirm'))) return
     setRotating(true)
     setBanner(null)
     try {
       const res  = await apiFetch('/api/config/sip/rotate', { method: 'POST' })
       const body = await res.json()
-      if (!res.ok) throw new Error(body.error ?? `Erreur ${res.status}`)
+      if (!res.ok) throw new Error(body.error ?? `Error ${res.status}`)
       setSipCreds({ username: body.username, password: body.password })
-      setBanner({ ok: true, message: 'Identifiants régénérés. Reconfigurez l\'appareil distant.' })
+      setBanner({ ok: true, message: t('config.rotated_ok') })
     } catch (e) {
       setBanner({ ok: false, message: e.message })
     } finally {
@@ -180,26 +176,28 @@ export default function Config() {
   if (!form) {
     return (
       <div className="page">
-        <h2 className="page-title">Configuration</h2>
-        {banner ? <Banner {...banner} onDismiss={() => setBanner(null)} /> : <p>Chargement…</p>}
+        <h2 className="page-title">{t('config.title')}</h2>
+        {banner ? <Banner {...banner} onDismiss={() => setBanner(null)} /> : <p>{t('common.loading')}</p>}
       </div>
     )
   }
 
+  const nChanged = changedConfigKeys.length + (sipChanged ? 1 : 0)
+
   return (
     <div className="page">
-      <h2 className="page-title">Configuration</h2>
+      <h2 className="page-title">{t('config.title')}</h2>
 
       <Banner {...(banner ?? {})} onDismiss={() => setBanner(null)} />
 
       {/* ── Mode ─────────────────────────────────────────────────────── */}
       <div className="card">
-        <div className="card-header">Mode de fonctionnement</div>
+        <div className="card-header">{t('config.card_mode')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Mode</label>
+            <label>{t('config.mode_label')}</label>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
-              {[['RECEIVER', 'Récepteur'], ['SENDER', 'Émetteur']].map(([val, label]) => (
+              {[['RECEIVER', t('config.receiver')], ['SENDER', t('config.sender')]].map(([val, label]) => (
                 <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '.35rem', cursor: 'pointer' }}>
                   <input type="radio" name="mode" value={val}
                     checked={form.mode === val}
@@ -214,22 +212,22 @@ export default function Config() {
             <>
               <div style={{ borderTop: '1px solid #e8e8e8', margin: '.6rem 0' }} />
               <p style={{ fontSize: '.82rem', color: '#666', marginBottom: '.6rem' }}>
-                Renseignez les identifiants de l'appareil <strong>récepteur</strong> distant.
+                {t('config.sender_hint')}
               </p>
               <div className="form-row">
-                <label>IP distante</label>
+                <label>{t('config.remote_ip')}</label>
                 <input type="text" value={sipForm.registrar}
                   onChange={e => setS('registrar', e.target.value)}
                   placeholder="10.0.1.11" style={{ width: 200 }} />
               </div>
               <div className="form-row">
-                <label>Login distant</label>
+                <label>{t('config.remote_login')}</label>
                 <input type="text" value={sipForm.remote_user}
                   onChange={e => setS('remote_user', e.target.value)}
                   placeholder="a1b2c3d4…" style={{ width: 260, fontFamily: 'monospace' }} />
               </div>
               <div className="form-row">
-                <label>Mot de passe distant</label>
+                <label>{t('config.remote_password')}</label>
                 <input type="text" value={sipForm.remote_password}
                   onChange={e => setS('remote_password', e.target.value)}
                   placeholder="e5f6…" style={{ width: 260, fontFamily: 'monospace' }} />
@@ -239,24 +237,27 @@ export default function Config() {
         </div>
       </div>
 
-      {/* ── Identifiants de cet appareil (récepteur uniquement) ─────── */}
+      {/* ── Credentials (receiver only) ─────────────────────────────── */}
       {form.mode === 'RECEIVER' && (
         <div className="card">
-          <div className="card-header">Identifiants de cet appareil</div>
+          <div className="card-header">{t('config.card_credentials')}</div>
           <div className="card-body">
             <p style={{ fontSize: '.82rem', color: '#666', marginBottom: '.75rem' }}>
-              Renseignez ces trois valeurs dans l'appareil émetteur pour établir la liaison.
+              {t('config.credentials_hint')}
             </p>
-            <CredField label="Adresse IP"    value={localIp ?? '…'} />
-            <CredField label="Login"         value={sipCreds.username} />
-            <CredField label="Mot de passe"  value={sipCreds.password} />
+            <CredField label={t('config.local_ip')} value={localIp ?? '…'}
+              copyLabel={t('common.copy')} copiedLabel={t('common.copied')} />
+            <CredField label={t('config.login')}    value={sipCreds.username}
+              copyLabel={t('common.copy')} copiedLabel={t('common.copied')} />
+            <CredField label={t('config.password')} value={sipCreds.password}
+              copyLabel={t('common.copy')} copiedLabel={t('common.copied')} />
             <div style={{ marginTop: '.75rem' }}>
               <button className="btn btn-danger" onClick={rotate} disabled={rotating}
                 style={{ fontSize: '.82rem' }}>
-                {rotating ? 'Régénération…' : 'Régénérer les identifiants'}
+                {rotating ? t('config.rotating') : t('config.rotate_btn')}
               </button>
               <span style={{ fontSize: '.78rem', color: '#856404', marginLeft: '.75rem' }}>
-                ⚠ Toute paire existante devra être reconfigurée
+                {t('config.rotate_warning')}
               </span>
             </div>
           </div>
@@ -265,10 +266,10 @@ export default function Config() {
 
       {/* ── Transport ────────────────────────────────────────────────── */}
       <div className="card">
-        <div className="card-header">Transport</div>
+        <div className="card-header">{t('config.card_transport')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Port de liaison</label>
+            <label>{t('config.port')}</label>
             <input type="number" min="1024" max="65535"
               value={form.sip_port}
               onChange={e => setF('sip_port', e.target.value)}
@@ -279,26 +280,26 @@ export default function Config() {
 
       {/* ── Audio ────────────────────────────────────────────────────── */}
       <div className="card">
-        <div className="card-header">Audio</div>
+        <div className="card-header">{t('config.card_audio')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Entrée (capture)</label>
+            <label>{t('config.input_device')}</label>
             <DeviceSelect value={form.audio_device_in} options={devices.capture}
-              onChange={v => setF('audio_device_in', v)} />
+              onChange={v => setF('audio_device_in', v)} placeholder={t('config.no_device')} />
           </div>
           <div className="form-row">
-            <label>Sortie (lecture)</label>
+            <label>{t('config.output_device')}</label>
             <DeviceSelect value={form.audio_device_out} options={devices.playback}
-              onChange={v => setF('audio_device_out', v)} />
+              onChange={v => setF('audio_device_out', v)} placeholder={t('config.no_device')} />
           </div>
           <div className="form-row">
-            <label>Volume capture</label>
+            <label>{t('config.capture_volume')}</label>
             <select value={form.capture_volume} onChange={e => setF('capture_volume', e.target.value)}>
               {VOLUMES.map(v => <option key={v} value={String(v)}>{v} %</option>)}
             </select>
           </div>
           <div className="form-row">
-            <label>Volume lecture</label>
+            <label>{t('config.playback_volume')}</label>
             <select value={form.playback_volume} onChange={e => setF('playback_volume', e.target.value)}>
               {VOLUMES.map(v => <option key={v} value={String(v)}>{v} %</option>)}
             </select>
@@ -308,23 +309,23 @@ export default function Config() {
 
       {/* ── Codec OPUS ───────────────────────────────────────────────── */}
       <div className="card">
-        <div className="card-header">Codec OPUS</div>
+        <div className="card-header">{t('config.card_codec')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Débit</label>
+            <label>{t('config.bitrate')}</label>
             <select value={form.opus_bitrate} onChange={e => setF('opus_bitrate', e.target.value)}>
               {BITRATES.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
             </select>
           </div>
           <div className="form-row">
-            <label>Stéréo</label>
+            <label>{t('config.stereo')}</label>
             <input type="checkbox"
               checked={form.opus_stereo === 'true'}
               onChange={e => setF('opus_stereo', e.target.checked ? 'true' : 'false')}
               style={{ width: 'auto', accentColor: '#1c3557' }} />
           </div>
           <div className="form-row">
-            <label>FEC (correction d'erreur)</label>
+            <label>{t('config.fec')}</label>
             <input type="checkbox"
               checked={form.opus_fec === 'true'}
               onChange={e => setF('opus_fec', e.target.checked ? 'true' : 'false')}
@@ -335,10 +336,12 @@ export default function Config() {
 
       <div className="btn-group">
         <button className="btn btn-primary" disabled={saving} onClick={save}>
-          {saving ? 'Sauvegarde…' : `Sauvegarder${hasChanges ? ` (${changedConfigKeys.length + (sipChanged ? 1 : 0)})` : ''}`}
+          {saving
+            ? t('config.saving_btn')
+            : hasChanges ? t('config.save_btn_n', { n: nChanged }) : t('config.save_btn')}
         </button>
         <button className="btn" disabled={saving || !hasChanges} onClick={cancel}>
-          Annuler
+          {t('config.cancel_btn')}
         </button>
       </div>
     </div>

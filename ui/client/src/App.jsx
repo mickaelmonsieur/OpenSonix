@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useCallback, useRef, useEffect } from 'react'
 import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
+import { useI18n } from './i18n/index.jsx'
 import Dashboard      from './pages/Dashboard.jsx'
 import Config         from './pages/Config.jsx'
 import Network        from './pages/Network.jsx'
@@ -49,7 +50,6 @@ function AuthProvider({ children }) {
     setToken(null)
   }, [])
 
-  // Authenticated fetch with automatic refresh-token retry on 401
   const apiFetch = useCallback(async (url, opts = {}) => {
     const makeHeaders = (t) => ({
       ...(opts.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
@@ -67,7 +67,7 @@ function AuthProvider({ children }) {
         res = await fetch(url, { ...opts, headers: makeHeaders(newToken) })
       } else {
         await logout()
-        throw Object.assign(new Error('Session expirée'), { status: 401 })
+        throw Object.assign(new Error('Session expired'), { status: 401 })
       }
     }
 
@@ -101,8 +101,9 @@ function RequireComplete({ children }) {
 // ── Navbar ────────────────────────────────────────────────────────────────────
 
 function Navbar() {
-  const { logout } = useAuth()
-  const navigate   = useNavigate()
+  const { logout }  = useAuth()
+  const { t }       = useI18n()
+  const navigate    = useNavigate()
 
   const handleLogout = async () => {
     await logout()
@@ -113,12 +114,12 @@ function Navbar() {
     <nav className="navbar">
       <NavLink to="/" className="navbar-brand">OpenSonix</NavLink>
       <div className="navbar-links">
-        <NavLink to="/"        end>Dashboard</NavLink>
-        <NavLink to="/config"     >Config</NavLink>
-        <NavLink to="/network"    >Network</NavLink>
-        <NavLink to="/system"     >System</NavLink>
+        <NavLink to="/"        end>{t('nav.dashboard')}</NavLink>
+        <NavLink to="/config"     >{t('nav.config')}</NavLink>
+        <NavLink to="/network"    >{t('nav.network')}</NavLink>
+        <NavLink to="/system"     >{t('nav.system')}</NavLink>
       </div>
-      <button className="navbar-logout" onClick={handleLogout}>Logout</button>
+      <button className="navbar-logout" onClick={handleLogout}>{t('nav.logout')}</button>
     </nav>
   )
 }
@@ -127,12 +128,12 @@ function Navbar() {
 
 function LoginPage() {
   const { token, user, saveToken } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
   const [form, setForm]   = useState({ username: '', password: '' })
   const [error, setError] = useState('')
   const [busy, setBusy]   = useState(false)
 
-  // Redirect if already authenticated
   if (token && !user?.mustChangePassword) return <Navigate to="/"               replace />
   if (token &&  user?.mustChangePassword) return <Navigate to="/change-password" replace />
 
@@ -147,11 +148,11 @@ function LoginPage() {
         body:    JSON.stringify(form),
       })
       const body = await res.json()
-      if (!res.ok) { setError(body.error ?? 'Erreur de connexion'); return }
+      if (!res.ok) { setError(body.error ?? t('login.error_login')); return }
       saveToken(body.token)
       navigate(body.mustChangePassword ? '/change-password' : '/', { replace: true })
     } catch {
-      setError('Impossible de joindre le serveur')
+      setError(t('login.error_server'))
     } finally {
       setBusy(false)
     }
@@ -163,7 +164,7 @@ function LoginPage() {
         <h1>OpenSonix</h1>
         <form onSubmit={handle}>
           <div className="form-row">
-            <label>Utilisateur</label>
+            <label>{t('login.username')}</label>
             <input
               autoFocus
               value={form.username}
@@ -172,7 +173,7 @@ function LoginPage() {
             />
           </div>
           <div className="form-row">
-            <label>Mot de passe</label>
+            <label>{t('login.password')}</label>
             <input
               type="password"
               value={form.password}
@@ -182,7 +183,7 @@ function LoginPage() {
           </div>
           {error && <div className="form-error">{error}</div>}
           <button className="btn btn-primary" disabled={busy}>
-            {busy ? 'Connexion…' : 'Se connecter'}
+            {busy ? t('login.signing_in') : t('login.sign_in')}
           </button>
         </form>
       </div>
@@ -208,11 +209,11 @@ export default function App() {
           <RequireComplete>
             <Navbar />
             <Routes>
-              <Route path="/"       element={<Dashboard />} />
-              <Route path="/config" element={<Config />} />
+              <Route path="/"        element={<Dashboard />} />
+              <Route path="/config"  element={<Config />} />
               <Route path="/network" element={<Network />} />
-              <Route path="/system" element={<System />} />
-              <Route path="*"       element={<Navigate to="/" replace />} />
+              <Route path="/system"  element={<System />} />
+              <Route path="*"        element={<Navigate to="/" replace />} />
             </Routes>
           </RequireComplete>
         } />

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../App.jsx'
+import { useAuth }             from '../App.jsx'
+import { useI18n }             from '../i18n/index.jsx'
 
 const EMPTY = { mode: 'dhcp', ip: '', mask: '', gateway: '', dns1: '', dns2: '', hostname: '' }
 
 export default function Network() {
   const { apiFetch } = useAuth()
+  const { t } = useI18n()
 
   const [original, setOriginal] = useState(null)
   const [form,     setForm]     = useState(EMPTY)
@@ -17,7 +19,7 @@ export default function Network() {
     apiFetch('/api/network')
       .then(r => r.json())
       .then(data => { setForm(data); setOriginal(data) })
-      .catch(() => setError('Impossible de charger la configuration réseau.'))
+      .catch(() => setError(t('network.load_error')))
   }, [])
 
   const set = (key, val) => {
@@ -31,10 +33,10 @@ export default function Network() {
     try {
       const res  = await apiFetch('/api/network', { method: 'POST', body: JSON.stringify(form) })
       const body = await res.json()
-      if (!res.ok) { setError(body.error ?? `Erreur ${res.status}`); return }
+      if (!res.ok) { setError(body.error ?? `Error ${res.status}`); return }
       setOriginal({ ...form })
       if (body.warning) setWarning(body.warning)
-      else              setSuccess('Configuration réseau sauvegardée.')
+      else              setSuccess(t('network.saved_ok'))
     } catch (e) {
       setError(e.message)
     } finally {
@@ -49,9 +51,8 @@ export default function Network() {
 
   return (
     <div className="page">
-      <h2 className="page-title">Réseau</h2>
+      <h2 className="page-title">{t('network.title')}</h2>
 
-      {/* ── Warning banner (IP changed) ── */}
       {warning && (
         <div style={{
           background: '#fff3cd', border: '1px solid #ffc107', color: '#856404',
@@ -60,7 +61,7 @@ export default function Network() {
         }}>
           <span style={{ fontSize: '1.1rem', lineHeight: 1 }}>⚠</span>
           <div>
-            <strong>Attention — changement d'adresse IP</strong><br />
+            <strong>{t('network.ip_change_title')}</strong><br />
             <span style={{ fontSize: '.88rem' }}>{warning}</span>
           </div>
         </div>
@@ -86,12 +87,12 @@ export default function Network() {
 
       {/* ── IP config ── */}
       <div className="card">
-        <div className="card-header">Configuration IP</div>
+        <div className="card-header">{t('network.card_ip')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Mode</label>
+            <label>{t('network.mode')}</label>
             <div style={{ display: 'flex', gap: '1.5rem' }}>
-              {[['dhcp', 'DHCP (automatique)'], ['static', 'Adresse statique']].map(([val, label]) => (
+              {[['dhcp', t('network.dhcp')], ['static', t('network.static')]].map(([val, label]) => (
                 <label key={val} style={{ display: 'flex', alignItems: 'center', gap: '.35rem', cursor: 'pointer' }}>
                   <input type="radio" name="ipmode" value={val}
                     checked={form.mode === val}
@@ -105,31 +106,31 @@ export default function Network() {
           {isStatic && (
             <>
               <div className="form-row">
-                <label>Adresse IP</label>
+                <label>{t('network.ip')}</label>
                 <input type="text" value={form.ip}
                   onChange={e => set('ip', e.target.value)}
                   placeholder="10.0.1.100" />
               </div>
               <div className="form-row">
-                <label>Masque de sous-réseau</label>
+                <label>{t('network.mask')}</label>
                 <input type="text" value={form.mask}
                   onChange={e => set('mask', e.target.value)}
                   placeholder="255.255.255.0" />
               </div>
               <div className="form-row">
-                <label>Passerelle</label>
+                <label>{t('network.gateway')}</label>
                 <input type="text" value={form.gateway}
                   onChange={e => set('gateway', e.target.value)}
                   placeholder="10.0.1.1" />
               </div>
               <div className="form-row">
-                <label>DNS primaire</label>
+                <label>{t('network.dns1')}</label>
                 <input type="text" value={form.dns1}
                   onChange={e => set('dns1', e.target.value)}
                   placeholder="8.8.8.8" />
               </div>
               <div className="form-row">
-                <label>DNS secondaire</label>
+                <label>{t('network.dns2')}</label>
                 <input type="text" value={form.dns2}
                   onChange={e => set('dns2', e.target.value)}
                   placeholder="8.8.4.4" />
@@ -141,10 +142,10 @@ export default function Network() {
 
       {/* ── Hostname ── */}
       <div className="card">
-        <div className="card-header">Identification</div>
+        <div className="card-header">{t('network.card_identity')}</div>
         <div className="card-body">
           <div className="form-row">
-            <label>Nom d'hôte</label>
+            <label>{t('network.hostname')}</label>
             <input type="text" value={form.hostname}
               onChange={e => set('hostname', e.target.value)}
               placeholder="opensonix" />
@@ -154,10 +155,10 @@ export default function Network() {
 
       <div className="btn-group">
         <button className="btn btn-primary" disabled={saving} onClick={save}>
-          {saving ? 'Sauvegarde…' : 'Sauvegarder'}
+          {saving ? t('network.saving_btn') : t('network.save_btn')}
         </button>
         <button className="btn" disabled={saving || !hasChange} onClick={cancel}>
-          Annuler
+          {t('network.cancel_btn')}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../App.jsx'
+import { useNavigate }         from 'react-router-dom'
+import { useAuth }             from '../App.jsx'
+import { useI18n }             from '../i18n/index.jsx'
 
 function Req({ ok, label }) {
   return (
@@ -14,6 +15,7 @@ function Req({ ok, label }) {
 
 export default function ChangePassword() {
   const { apiFetch, saveToken } = useAuth()
+  const { t } = useI18n()
   const navigate = useNavigate()
 
   const [form,   setForm]   = useState({ currentPassword: '', newPassword: '', confirm: '' })
@@ -39,11 +41,11 @@ export default function ChangePassword() {
   const submit = async (e) => {
     e.preventDefault()
     if (form.newPassword !== form.confirm) {
-      setError('Les mots de passe ne correspondent pas.')
+      setError(t('change_password.error_mismatch'))
       return
     }
     if (!isStrong) {
-      setError('Le mot de passe ne respecte pas les exigences.')
+      setError(t('change_password.error_strength'))
       return
     }
     setBusy(true)
@@ -54,7 +56,7 @@ export default function ChangePassword() {
         body:   JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),
       })
       const body = await res.json()
-      if (!res.ok) { setError(body.error ?? `Erreur ${res.status}`); return }
+      if (!res.ok) { setError(body.error ?? `Error ${res.status}`); return }
       saveToken(body.token)
       navigate('/', { replace: true })
     } catch (e) {
@@ -67,39 +69,39 @@ export default function ChangePassword() {
   return (
     <div className="login-wrap">
       <div className="login-box">
-        <h1>Changer le mot de passe</h1>
+        <h1>{t('change_password.title')}</h1>
         <p style={{ fontSize: '.85rem', color: '#666', marginBottom: '.75rem', marginTop: '-.25rem' }}>
-          Vous devez définir un nouveau mot de passe avant de continuer.
+          {t('change_password.subtitle')}
         </p>
         <form onSubmit={submit}>
           <div className="form-row">
-            <label>Mot de passe actuel</label>
+            <label>{t('change_password.current')}</label>
             <input type="password" value={form.currentPassword}
               onChange={e => set('currentPassword', e.target.value)}
               autoFocus disabled={busy} />
           </div>
           <div className="form-row">
-            <label>Nouveau mot de passe</label>
+            <label>{t('change_password.new_pw')}</label>
             <input type="password" value={form.newPassword}
               onChange={e => set('newPassword', e.target.value)}
               disabled={busy} />
             {pw.length > 0 && (
               <div style={{ marginTop: '.4rem', display: 'flex', flexDirection: 'column', gap: '.2rem' }}>
-                <Req ok={hasLen}     label={`Au moins ${minLen} caractères`} />
-                <Req ok={hasUpper}   label="Au moins une majuscule" />
-                <Req ok={hasSpecial} label="Au moins un caractère spécial (!@#…)" />
+                <Req ok={hasLen}     label={t('change_password.req_length', { n: minLen })} />
+                <Req ok={hasUpper}   label={t('change_password.req_upper')} />
+                <Req ok={hasSpecial} label={t('change_password.req_special')} />
               </div>
             )}
           </div>
           <div className="form-row">
-            <label>Confirmer</label>
+            <label>{t('change_password.confirm')}</label>
             <input type="password" value={form.confirm}
               onChange={e => set('confirm', e.target.value)}
               disabled={busy} />
           </div>
           {error && <div className="form-error">{error}</div>}
           <button className="btn btn-primary" disabled={busy}>
-            {busy ? 'Sauvegarde…' : 'Changer le mot de passe'}
+            {busy ? t('change_password.saving_btn') : t('change_password.save_btn')}
           </button>
         </form>
       </div>
