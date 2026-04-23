@@ -109,8 +109,6 @@ npm install
 npm run dev        # starts backend (port 3000) + Vite dev server (port 5173)
 ```
 
-See [CLAUDE.md](CLAUDE.md) for the full architecture and coding conventions.
-
 ---
 
 ## 💼 Professional support
