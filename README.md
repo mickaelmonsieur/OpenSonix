@@ -17,7 +17,7 @@ It wraps [baresip](https://github.com/baresip/baresip) (SIP + OPUS) with a moder
 - **One-click pairing** — generate credentials on the receiver, paste them on the sender
 - **Network config** — DHCP or static IP, hostname, all from the UI
 - **NTP + timezone** — configure NTP servers and timezone from the web interface
-- **Security built-in** — SSH key-only auth, brute-force protection on the web UI, forced password change on first login
+- **Security built-in** — Brute-force protection on the web UI, forced password change on first login
 - **Diagnostic report** — one-click full system dump to paste into a GitHub Issue
 - **Factory reset** — restore to defaults in one click
 - **Multilingual UI** — English (default) and French
@@ -53,7 +53,7 @@ Default credentials: `admin` / `opensonix` — **you will be asked to change the
 - On the **Sender**: paste those three values and hit Save
 - Both devices will register and the link will establish automatically
 
-That's it. No SSH required to get started.
+That's it.
 
 ---
 
@@ -92,7 +92,6 @@ OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated M
 
 - The web UI uses JWT authentication with a 15-minute access token
 - Brute-force protection is built in and configurable (attempts / window)
-- SSH access requires a public key — password authentication is disabled
 - Always change the default web password on first login
 
 If you need to link two sites over the Internet, set up a VPN or MPLS tunnel between them first.
