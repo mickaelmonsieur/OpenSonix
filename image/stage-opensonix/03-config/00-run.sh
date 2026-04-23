@@ -7,7 +7,6 @@ install -m 664 "${STAGE_DIR}/files/baresip-config/accounts" "${ROOTFS_DIR}/etc/b
 install -d -m 750 "${ROOTFS_DIR}/var/lib/opensonix"
 
 on_chroot << 'EOF'
-# /etc/baresip — opensonix writes (owner+group), baresip reads (world-read via o+r)
 chown root:opensonix /etc/baresip /etc/baresip/config /etc/baresip/accounts
 chmod 775 /etc/baresip
 chmod 664 /etc/baresip/config /etc/baresip/accounts
