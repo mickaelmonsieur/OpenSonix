@@ -183,7 +183,7 @@ export default {
     factory_warning: '⚠ Irreversible — device will reboot',
     factory_confirm: 'FACTORY RESET\n\nAll configuration will be lost:\n\n— audio and codec configuration reset\n— link credentials regenerated\n— password reset to "opensonix"\n— network reset to DHCP\n\nThe device will reboot. Confirm?',
     factory_success: 'Factory reset done. Rebooting…',
-    backup_hint:            'Export the current configuration to a file, or restore from a previously saved backup. SIP credentials and audio settings are included.',
+    backup_hint:            'Export the current configuration to a file, or restore from a previously saved backup. Credentials and audio settings are included.',
     backup_export_btn:      'Export configuration',
     backup_import_btn:      'Restore from file',
     backup_restore_confirm: 'Restore configuration from this file?\n\nThis will overwrite the current configuration and reload the audio engine.',

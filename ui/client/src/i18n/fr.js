@@ -183,7 +183,7 @@ export default {
     factory_warning: '⚠ Irréversible — l\'appareil redémarre',
     factory_confirm: 'REMISE À ZÉRO COMPLÈTE\n\nToute la configuration sera perdue :\n\n— configuration audio et codec réinitialisée\n— identifiants de liaison régénérés\n— mot de passe remis à "opensonix"\n— réseau remis en DHCP\n\nL\'appareil redémarrera. Confirmer ?',
     factory_success: 'Remise à zéro effectuée. Redémarrage en cours…',
-    backup_hint:            'Exportez la configuration actuelle dans un fichier, ou restaurez depuis une sauvegarde précédente. Les identifiants SIP et les réglages audio sont inclus.',
+    backup_hint:            'Exportez la configuration actuelle dans un fichier, ou restaurez depuis une sauvegarde précédente. Les identifiants et les réglages audio sont inclus.',
     backup_export_btn:      'Exporter la configuration',
     backup_import_btn:      'Restaurer depuis un fichier',
     backup_restore_confirm: 'Restaurer la configuration depuis ce fichier ?\n\nCela écrasera la configuration actuelle et rechargera le moteur audio.',
