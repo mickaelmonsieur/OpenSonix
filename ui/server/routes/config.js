@@ -76,7 +76,7 @@ function renderBaresipAccounts(cfg, sip) {
   return `<sip:${sip.username}@0.0.0.0:${cfg.sip_port}>;regint=0;\n`
 }
 
-async function applyBaresipConfig() {
+export async function applyBaresipConfig() {
   const cfg = cfgMap()
   const sip = getSip()
   try {

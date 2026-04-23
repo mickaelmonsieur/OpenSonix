@@ -1,12 +1,17 @@
-import { execFile as _execFile } from 'node:child_process'
-import { readFile, writeFile }   from 'node:fs/promises'
-import { promisify }             from 'node:util'
-import { randomBytes }           from 'node:crypto'
-import os                        from 'node:os'
-import bcrypt                    from 'bcryptjs'
-import db                        from '../db.js'
-import { writeNetworkConfig }    from '../network.js'
+import { execFile as _execFile }              from 'node:child_process'
+import { readFile, writeFile }               from 'node:fs/promises'
+import { promisify }                         from 'node:util'
+import { randomBytes }                       from 'node:crypto'
+import { brotliCompressSync, brotliDecompressSync } from 'node:zlib'
+import os                                    from 'node:os'
+import bcrypt                                from 'bcryptjs'
+import db                                    from '../db.js'
+import { writeNetworkConfig }                from '../network.js'
 import { authenticate, requirePasswordChanged } from '../auth.js'
+import { applyBaresipConfig }               from './config.js'
+
+// Magic header identifying a valid .osonix backup file (4 bytes: "OSX\x01")
+const MAGIC = Buffer.from([0x4f, 0x53, 0x58, 0x01])
 
 const execFile = promisify(_execFile)
 const genToken = () => randomBytes(16).toString('hex')
@@ -313,6 +318,74 @@ export default async function systemRoutes(fastify) {
     }
     db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run('ntp_server_1', server1)
     db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run('ntp_server_2', server2)
+    return { ok: true }
+  })
+
+  // ── Backup / Restore ─────────────────────────────────────────────────────────
+
+  // GET /api/system/backup → brotli-compressed binary .osonix file
+  fastify.get('/backup', async (req, reply) => {
+    const configRows = db.prepare('SELECT key, value FROM config').all()
+    const config     = Object.fromEntries(configRows.map(r => [r.key, r.value]))
+    const sip        = db.prepare(
+      'SELECT username, password, registrar, remote_user, remote_password FROM sip_account WHERE id = 1'
+    ).get() ?? {}
+
+    const json = JSON.stringify({ version: 1, exported_at: new Date().toISOString(), config, sip_account: sip })
+    const compressed = brotliCompressSync(Buffer.from(json, 'utf8'))
+    const file       = Buffer.concat([MAGIC, compressed])
+
+    const dateStr = new Date().toISOString().slice(0, 10)
+    return reply
+      .header('Content-Type', 'application/octet-stream')
+      .header('Content-Disposition', `attachment; filename="opensonix-${dateStr}.osonix"`)
+      .send(file)
+  })
+
+  // POST /api/system/restore — upload a .osonix binary and apply it
+  fastify.addContentTypeParser('application/octet-stream', { parseAs: 'buffer' }, (req, body, done) => {
+    done(null, body)
+  })
+
+  fastify.post('/restore', async (req, reply) => {
+    const buf = req.body
+    if (!Buffer.isBuffer(buf) || buf.length < MAGIC.length || !buf.subarray(0, MAGIC.length).equals(MAGIC)) {
+      return reply.code(400).send({ error: 'Invalid backup file' })
+    }
+
+    let payload
+    try {
+      const decompressed = brotliDecompressSync(buf.subarray(MAGIC.length))
+      payload = JSON.parse(decompressed.toString('utf8'))
+    } catch {
+      return reply.code(400).send({ error: 'Corrupted backup file' })
+    }
+
+    if (payload.version !== 1 || typeof payload.config !== 'object' || typeof payload.sip_account !== 'object') {
+      return reply.code(400).send({ error: 'Invalid backup format' })
+    }
+
+    // Only restore keys that exist in the DB (prevents injection of unknown keys)
+    const existingKeys = new Set(db.prepare('SELECT key FROM config').all().map(r => r.key))
+    const upsert       = db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)')
+    db.transaction(() => {
+      for (const [key, value] of Object.entries(payload.config)) {
+        if (existingKeys.has(key)) upsert.run(key, String(value))
+      }
+    })()
+
+    const sip = payload.sip_account
+    db.prepare(
+      'UPDATE sip_account SET username = ?, password = ?, registrar = ?, remote_user = ?, remote_password = ? WHERE id = 1'
+    ).run(
+      sip.username        ?? null,
+      sip.password        ?? null,
+      sip.registrar       ?? null,
+      sip.remote_user     ?? null,
+      sip.remote_password ?? null,
+    )
+
+    await applyBaresipConfig()
     return { ok: true }
   })
 

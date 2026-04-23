@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate }                       from 'react-router-dom'
 import { useAuth }                           from '../App.jsx'
 import { useI18n, LANGUAGES }               from '../i18n/index.jsx'
@@ -309,6 +309,84 @@ function DiagReport({ apiFetch }) {
   )
 }
 
+// ── BackupRestore ─────────────────────────────────────────────────────────────
+
+function BackupRestore({ apiFetch }) {
+  const { t }          = useI18n()
+  const fileInputRef   = useRef(null)
+  const [busy, setBusy] = useState(false)
+  const [status, setStatus] = useState(null) // { ok, message }
+
+  const exportConfig = async () => {
+    setBusy(true)
+    setStatus(null)
+    try {
+      const res = await apiFetch('/api/system/backup')
+      if (!res.ok) throw new Error(`Error ${res.status}`)
+      const blob = await res.blob()
+      const url  = URL.createObjectURL(blob)
+      const a    = document.createElement('a')
+      a.href     = url
+      a.download = `opensonix-${new Date().toISOString().slice(0, 10)}.osonix`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      setStatus({ ok: false, message: e.message })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const importConfig = async (e) => {
+    const file = e.target.files[0]
+    e.target.value = ''
+    if (!file) return
+    if (!confirm(t('system.backup_restore_confirm'))) return
+    setBusy(true)
+    setStatus(null)
+    try {
+      const buffer = await file.arrayBuffer()
+      const res    = await apiFetch('/api/system/restore', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body:    buffer,
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error ?? `Error ${res.status}`)
+      setStatus({ ok: true, message: t('system.backup_restore_ok') })
+    } catch (e) {
+      setStatus({ ok: false, message: e.message || t('system.backup_restore_err') })
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const statusStyle = status
+    ? status.ok
+      ? { background: '#d4edda', border: '1px solid #b1dfbb', color: '#155724', padding: '.4rem .65rem', marginBottom: '.75rem', fontSize: '.85rem' }
+      : { background: '#f8d7da', border: '1px solid #f5c6cb', color: '#721c24', padding: '.4rem .65rem', marginBottom: '.75rem', fontSize: '.85rem' }
+    : null
+
+  return (
+    <div>
+      <p style={{ fontSize: '.88rem', color: '#444', marginBottom: '.75rem' }}>
+        {t('system.backup_hint')}
+      </p>
+      {status && <div style={statusStyle}>{status.message}</div>}
+      <div className="btn-group">
+        <button className="btn btn-primary" onClick={exportConfig} disabled={busy}>
+          {t('system.backup_export_btn')}
+        </button>
+        <label className="btn" style={{ cursor: busy ? 'not-allowed' : 'pointer', opacity: busy ? .6 : 1 }}>
+          {t('system.backup_import_btn')}
+          <input ref={fileInputRef} type="file" accept=".osonix"
+            style={{ display: 'none' }} onChange={importConfig} disabled={busy} />
+        </label>
+      </div>
+    </div>
+  )
+}
+
 // ── LangSelector ──────────────────────────────────────────────────────────────
 
 function LangSelector() {
@@ -381,6 +459,14 @@ export default function System() {
         <div className="card-header">{t('system.card_report')}</div>
         <div className="card-body">
           <DiagReport apiFetch={apiFetch} />
+        </div>
+      </div>
+
+      {/* ── Backup / Restore ─────────────────────────────────────────────── */}
+      <div className="card">
+        <div className="card-header">{t('system.card_backup')}</div>
+        <div className="card-body">
+          <BackupRestore apiFetch={apiFetch} />
         </div>
       </div>
 
