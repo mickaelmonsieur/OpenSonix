@@ -65,9 +65,11 @@ async function getSystemInfo() {
   // Firmware version written at image build time
   const fwVersion = await readText('/etc/opensonix-release')
 
-  // Software versions
-  const [baresipVersion] = await Promise.all([
+  // Software versions (parallel dpkg queries)
+  const [baresipVersion, libopusVersion, alsaVersion] = await Promise.all([
     dpkgVersion('baresip'),
+    dpkgVersion('libopus0'),
+    dpkgVersion('alsa-utils'),
   ])
 
   return {
@@ -83,8 +85,52 @@ async function getSystemInfo() {
       kernel:    os.release(),
       node:      process.version,
       baresip:   baresipVersion,
+      libopus:   libopusVersion,
+      alsa:      alsaVersion,
     },
   }
+}
+
+async function buildReport() {
+  const run = async (cmd, args) => {
+    try {
+      const { stdout, stderr } = await execFile(cmd, args)
+      return (stdout + stderr).trim()
+    } catch (e) {
+      return e.stdout?.trim() || e.stderr?.trim() || `[error: ${e.message}]`
+    }
+  }
+
+  const section = (title, content) =>
+    `### ${title}\n\`\`\`\n${content || '(empty)'}\n\`\`\``
+
+  const fw      = await readText('/etc/opensonix-release')
+  const osRel   = await readText('/etc/os-release')
+  const cpuinfo = await readText('/proc/cpuinfo')
+
+  const [uname, freeMem, uptime, lsblk, dpkgList] = await Promise.all([
+    run('uname',  ['-a']),
+    run('free',   ['-m']),
+    run('uptime', []),
+    run('lsblk',  ['-o', 'NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT']),
+    run('dpkg',   ['-l']),
+  ])
+
+  const lines = [
+    `## OpenSonix — Rapport de diagnostic`,
+    `Généré le : ${new Date().toISOString()}`,
+    `Firmware   : ${fw ?? 'dev'}`,
+    '',
+    section('uname -a',        uname),
+    section('uptime',          uptime),
+    section('free -m',         freeMem),
+    section('/etc/os-release', osRel),
+    section('/proc/cpuinfo',   cpuinfo),
+    section('lsblk',           lsblk),
+    section('dpkg -l',         dpkgList),
+  ]
+
+  return lines.join('\n\n')
 }
 
 export default async function systemRoutes(fastify) {
@@ -93,6 +139,9 @@ export default async function systemRoutes(fastify) {
 
   // GET /api/system/info
   fastify.get('/info', async () => getSystemInfo())
+
+  // GET /api/system/report — full diagnostic dump for GitHub issues
+  fastify.get('/report', async () => ({ report: await buildReport() }))
 
   // POST /api/system/reboot
   fastify.post('/reboot', async () => {

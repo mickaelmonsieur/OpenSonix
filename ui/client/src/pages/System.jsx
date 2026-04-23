@@ -77,6 +77,8 @@ function SystemInfo({ apiFetch }) {
             <InfoRow label="Kernel"       value={v.kernel} />
             <InfoRow label="Node.js"      value={v.node} />
             <InfoRow label="Moteur codec" value={v.baresip} />
+            <InfoRow label="libopus"      value={v.libopus} />
+            <InfoRow label="ALSA"         value={v.alsa} />
           </tbody>
         </table>
       </div>
@@ -93,6 +95,63 @@ function Banner({ ok, message, onDismiss }) {
     <div style={{ ...s, padding: '.5rem .75rem', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
       <span>{message}</span>
       <button onClick={onDismiss} style={{ background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700, color: 'inherit' }}>✕</button>
+    </div>
+  )
+}
+
+function DiagReport({ apiFetch }) {
+  const [report,  setReport]  = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [copied,  setCopied]  = useState(false)
+
+  const generate = async () => {
+    setLoading(true)
+    try {
+      const res = await apiFetch('/api/system/report')
+      const { report: r } = await res.json()
+      setReport(r)
+    } catch {
+      setReport('[Erreur lors de la génération du rapport]')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const copy = () => {
+    navigator.clipboard?.writeText(report).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+
+  return (
+    <div>
+      <p style={{ fontSize: '.88rem', color: '#444', marginBottom: '.75rem' }}>
+        Génère un rapport de diagnostic à coller dans une{' '}
+        <a href="https://github.com/mickaelmonsieur/OpenSonix/issues" target="_blank" rel="noreferrer">GitHub Issue</a>.
+      </p>
+      <div className="btn-group" style={{ marginBottom: '.75rem' }}>
+        <button className="btn btn-primary" onClick={generate} disabled={loading}>
+          {loading ? 'Génération…' : 'Générer le rapport'}
+        </button>
+        {report && (
+          <button className="btn" onClick={copy}>
+            {copied ? '✓ Copié' : 'Copier'}
+          </button>
+        )}
+      </div>
+      {report && (
+        <textarea
+          readOnly
+          value={report}
+          rows={20}
+          style={{
+            width: '100%', fontFamily: 'monospace', fontSize: '.75rem',
+            border: '1px solid #bbb', padding: '.5rem', resize: 'vertical',
+            background: '#f8f8f8', color: '#222', lineHeight: 1.4,
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -132,6 +191,14 @@ export default function System() {
         <div className="card-header">Informations système</div>
         <div className="card-body">
           <SystemInfo apiFetch={apiFetch} />
+        </div>
+      </div>
+
+      {/* ── Rapport de diagnostic ───────────────────────────────────────── */}
+      <div className="card">
+        <div className="card-header">Rapport de diagnostic</div>
+        <div className="card-body">
+          <DiagReport apiFetch={apiFetch} />
         </div>
       </div>
 
