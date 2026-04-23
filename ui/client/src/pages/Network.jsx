@@ -108,7 +108,7 @@ export default function Network() {
                 <label>Adresse IP</label>
                 <input type="text" value={form.ip}
                   onChange={e => set('ip', e.target.value)}
-                  placeholder="192.168.1.100" />
+                  placeholder="10.0.1.100" />
               </div>
               <div className="form-row">
                 <label>Masque de sous-réseau</label>
@@ -120,7 +120,7 @@ export default function Network() {
                 <label>Passerelle</label>
                 <input type="text" value={form.gateway}
                   onChange={e => set('gateway', e.target.value)}
-                  placeholder="192.168.1.1" />
+                  placeholder="10.0.1.1" />
               </div>
               <div className="form-row">
                 <label>DNS primaire</label>

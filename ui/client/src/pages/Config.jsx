@@ -220,7 +220,7 @@ export default function Config() {
                 <label>IP distante</label>
                 <input type="text" value={sipForm.registrar}
                   onChange={e => setS('registrar', e.target.value)}
-                  placeholder="192.168.1.11" style={{ width: 200 }} />
+                  placeholder="10.0.1.11" style={{ width: 200 }} />
               </div>
               <div className="form-row">
                 <label>Login distant</label>
