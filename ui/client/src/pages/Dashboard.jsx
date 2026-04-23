@@ -31,19 +31,19 @@ function DaemonBadge({ connected }) {
 }
 
 function VuMeter({ tx, rx }) {
-  const pctTx = Math.round(Math.min(1, Math.max(0, tx)) * 100)
-  const pctRx = Math.round(Math.min(1, Math.max(0, rx)) * 100)
+  const pctIn  = Math.round(Math.min(1, Math.max(0, tx)) * 100)
+  const pctOut = Math.round(Math.min(1, Math.max(0, rx)) * 100)
   return (
     <div>
       <div className="vu-row">
-        <span className="vu-label">TX</span>
-        <div className="vu-track"><div className="vu-bar"    style={{ width: `${pctTx}%` }} /></div>
-        <span className="vu-pct">{pctTx}%</span>
+        <span className="vu-label">IN</span>
+        <div className="vu-track"><div className="vu-bar"    style={{ width: `${pctIn}%`  }} /></div>
+        <span className="vu-pct">{pctIn}%</span>
       </div>
       <div className="vu-row">
-        <span className="vu-label">RX</span>
-        <div className="vu-track"><div className="vu-bar rx" style={{ width: `${pctRx}%` }} /></div>
-        <span className="vu-pct">{pctRx}%</span>
+        <span className="vu-label">OUT</span>
+        <div className="vu-track"><div className="vu-bar rx" style={{ width: `${pctOut}%` }} /></div>
+        <span className="vu-pct">{pctOut}%</span>
       </div>
     </div>
   )
@@ -149,15 +149,13 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── VU meter (only when call active) ── */}
-      {isConnected && (
-        <div className="card">
-          <div className="card-header">Niveaux audio</div>
-          <div className="card-body">
-            <VuMeter tx={audioLevel.tx} rx={audioLevel.rx} />
-          </div>
+      {/* ── VU meter (always visible) ── */}
+      <div className="card">
+        <div className="card-header">Niveaux audio</div>
+        <div className="card-body">
+          <VuMeter tx={audioLevel.tx} rx={audioLevel.rx} />
         </div>
-      )}
+      </div>
 
       {/* ── Controls ── */}
       <div className="card">

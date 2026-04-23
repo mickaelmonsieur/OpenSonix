@@ -46,6 +46,7 @@ export function useWebSocket(token) {
             break
           case 'call:closed':
             setCall(null)
+            setAudioLevel({ tx: 0, rx: 0 })
             break
           case 'reg:ok':
             setRegistration('ok')
