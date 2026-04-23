@@ -49,24 +49,38 @@ function SystemInfo({ apiFetch }) {
   const netLabel = info.network.iface
     ? `${info.network.iface} — ${info.network.state === 'up' ? (info.network.speed ? `${info.network.speed} Mbps` : 'up') : info.network.state}`
     : '—'
-
   const datetime = info.datetime
     ? new Date(info.datetime).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' })
     : '—'
 
+  const v = info.versions ?? {}
+
   return (
-    <table style={{ borderCollapse: 'collapse', fontSize: '.88rem', width: '100%' }}>
-      <tbody>
-        <InfoRow label="Uptime"         value={fmtUptime(info.uptime)} />
-        <InfoRow label="Charge (1/5/15m)" value={`${fmtLoad(info.load.m1)} / ${fmtLoad(info.load.m5)} / ${fmtLoad(info.load.m15)}`} />
-        <InfoRow label="Cœurs CPU"      value={info.cpus} />
-        <InfoRow label="Mémoire"        value={`${fmtMem(usedMem)} utilisés / ${fmtMem(info.memory.total)} total`} />
-        <InfoRow label="Réseau"         value={netLabel} />
-        <InfoRow label="Date / heure"   value={datetime} />
-        <InfoRow label="OS"             value={info.osName} />
-        <InfoRow label="Firmware"       value={info.fwVersion ?? 'dev'} />
-      </tbody>
-    </table>
+    <>
+      <table style={{ borderCollapse: 'collapse', fontSize: '.88rem', width: '100%', marginBottom: '1rem' }}>
+        <tbody>
+          <InfoRow label="Uptime"           value={fmtUptime(info.uptime)} />
+          <InfoRow label="Charge (1/5/15m)" value={`${fmtLoad(info.load.m1)} / ${fmtLoad(info.load.m5)} / ${fmtLoad(info.load.m15)}`} />
+          <InfoRow label="Cœurs CPU"        value={info.cpus} />
+          <InfoRow label="Mémoire"          value={`${fmtMem(usedMem)} utilisés / ${fmtMem(info.memory.total)} total`} />
+          <InfoRow label="Réseau"           value={netLabel} />
+          <InfoRow label="Date / heure"     value={datetime} />
+          <InfoRow label="OS"               value={info.osName} />
+        </tbody>
+      </table>
+
+      <div style={{ borderTop: '1px solid #e8e8e8', paddingTop: '.75rem' }}>
+        <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '.4rem' }}>Versions logicielles</div>
+        <table style={{ borderCollapse: 'collapse', fontSize: '.88rem', width: '100%' }}>
+          <tbody>
+            <InfoRow label="Firmware"     value={v.firmware} />
+            <InfoRow label="Kernel"       value={v.kernel} />
+            <InfoRow label="Node.js"      value={v.node} />
+            <InfoRow label="Moteur codec" value={v.baresip} />
+          </tbody>
+        </table>
+      </div>
+    </>
   )
 }
 

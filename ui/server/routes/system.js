@@ -29,6 +29,13 @@ async function readText(path) {
   try { return (await readFile(path, 'utf8')).trim() } catch { return null }
 }
 
+async function dpkgVersion(pkg) {
+  try {
+    const { stdout } = await execFile('dpkg-query', ['-W', `-f=\${Version}`, pkg])
+    return stdout.trim() || null
+  } catch { return null }
+}
+
 async function getSystemInfo() {
   const [load1, load5, load15] = os.loadavg()
   const totalMem = os.totalmem()
@@ -58,6 +65,11 @@ async function getSystemInfo() {
   // Firmware version written at image build time
   const fwVersion = await readText('/etc/opensonix-release')
 
+  // Software versions
+  const [baresipVersion] = await Promise.all([
+    dpkgVersion('baresip'),
+  ])
+
   return {
     uptime:  os.uptime(),
     load:    { m1: load1, m5: load5, m15: load15 },
@@ -66,7 +78,12 @@ async function getSystemInfo() {
     network: { iface: netIface, state: netState, speed: netSpeed },
     datetime: new Date().toISOString(),
     osName,
-    fwVersion,
+    versions: {
+      firmware:  fwVersion ?? 'dev',
+      kernel:    os.release(),
+      node:      process.version,
+      baresip:   baresipVersion,
+    },
   }
 }
 
