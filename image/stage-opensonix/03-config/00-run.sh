@@ -18,3 +18,19 @@ chmod 664 /etc/baresip/config /etc/baresip/accounts
 chown -R opensonix:opensonix /opt/opensonix
 chown    opensonix:opensonix /var/lib/opensonix
 EOF
+
+# ── SSH hardening ─────────────────────────────────────────────────────────────
+# Disable password auth — keys only.
+mkdir -p "${ROOTFS_DIR}/etc/ssh/sshd_config.d"
+cat > "${ROOTFS_DIR}/etc/ssh/sshd_config.d/99-opensonix.conf" << 'SSHEOF'
+PasswordAuthentication no
+ChallengeResponseAuthentication no
+SSHEOF
+
+# Install authorized key for the opensonix user.
+install -d -m 700 "${ROOTFS_DIR}/home/opensonix/.ssh"
+install -m 600 "${STAGE_DIR}/id_ed25519.pub" "${ROOTFS_DIR}/home/opensonix/.ssh/authorized_keys"
+
+on_chroot << 'EOF'
+chown -R opensonix:opensonix /home/opensonix/.ssh
+EOF

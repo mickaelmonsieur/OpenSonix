@@ -22,6 +22,7 @@ const ALLOWED_KEYS = new Set([
   'capture_volume',  'playback_volume',
   'opus_bitrate',    'opus_stereo', 'opus_fec',
   'sip_port',
+  'login_max_attempts', 'login_window_minutes', 'password_min_length',
 ])
 
 // ── helpers ──────────────────────────────────────────────────────────────────

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(npm uninstall *)",
+      "Bash(git -C /Users/mickael/Documents/opensonix tag --sort=-version:refname)"
+    ]
+  }
+}

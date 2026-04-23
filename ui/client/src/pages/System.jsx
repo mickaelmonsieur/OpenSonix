@@ -86,6 +86,67 @@ function SystemInfo({ apiFetch }) {
   )
 }
 
+function SecurityConfig({ apiFetch }) {
+  const FIELDS = [
+    { key: 'login_max_attempts',   label: 'Tentatives max avant blocage', min: 1,  max: 100, unit: 'tentatives' },
+    { key: 'login_window_minutes', label: 'Durée de la fenêtre de blocage', min: 1, max: 1440, unit: 'minutes' },
+    { key: 'password_min_length',  label: 'Longueur minimale du mot de passe', min: 8, max: 128, unit: 'caractères' },
+  ]
+
+  const [vals,    setVals]    = useState({})
+  const [saved,   setSaved]   = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    apiFetch('/api/config').then(r => r.json()).then(d => {
+      setVals({
+        login_max_attempts:   d.login_max_attempts   ?? '10',
+        login_window_minutes: d.login_window_minutes ?? '15',
+        password_min_length:  d.password_min_length  ?? '12',
+      })
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [apiFetch])
+
+  const save = async () => {
+    await Promise.all(
+      FIELDS.map(({ key }) =>
+        apiFetch('/api/config', {
+          method: 'POST',
+          body:   JSON.stringify({ key, value: String(vals[key]) }),
+        })
+      )
+    )
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  if (loading) return null
+
+  return (
+    <div style={{ borderTop: '1px solid #e8e8e8', marginTop: '1rem', paddingTop: '.85rem' }}>
+      <div style={{ fontSize: '.72rem', fontWeight: 700, color: '#888', textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '.6rem' }}>
+        Protection anti-bruteforce
+      </div>
+      {FIELDS.map(({ key, label, min, max, unit }) => (
+        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '.6rem', marginBottom: '.5rem' }}>
+          <label style={{ fontSize: '.85rem', color: '#444', flex: 1 }}>{label}</label>
+          <input
+            type="number" min={min} max={max} value={vals[key] ?? ''}
+            onChange={e => setVals(v => ({ ...v, [key]: e.target.value }))}
+            style={{ width: '5rem', textAlign: 'right', fontFamily: 'monospace', fontSize: '.88rem',
+                     border: '1px solid #bbb', padding: '.25rem .4rem' }}
+          />
+          <span style={{ fontSize: '.78rem', color: '#888', minWidth: '5rem' }}>{unit}</span>
+        </div>
+      ))}
+      <button className="btn btn-primary" onClick={save} style={{ marginTop: '.25rem' }}>
+        {saved ? '✓ Sauvegardé' : 'Sauvegarder'}
+      </button>
+    </div>
+  )
+}
+
 function Banner({ ok, message, onDismiss }) {
   if (!message) return null
   const s = ok
@@ -211,6 +272,7 @@ export default function System() {
           <button className="btn btn-primary" onClick={() => navigate('/change-password')}>
             Changer le mot de passe
           </button>
+          <SecurityConfig apiFetch={apiFetch} />
         </div>
       </div>
 
@@ -219,11 +281,11 @@ export default function System() {
         <div className="card-header">Redémarrage</div>
         <div className="card-body">
           <p style={{ fontSize: '.88rem', color: '#444', marginBottom: '.75rem' }}>
-            Redémarre le Raspberry Pi. La liaison audio est interrompue pendant environ 30 secondes.
+            Redémarre OpenSonix. La liaison audio est interrompue pendant environ 30 secondes.
           </p>
           <button className="btn" disabled={busy} onClick={() => action(
             'reboot',
-            'Redémarrer le Raspberry Pi ?\n\nLa liaison sera interrompue.',
+            'Redémarrer OpenSonix ?\n\nLa liaison sera interrompue.',
             'Redémarrage en cours… reconnectez-vous dans 30 secondes.'
           )}>
             Redémarrer

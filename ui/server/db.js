@@ -103,7 +103,10 @@ function seed() {
     insertConfig.run('opus_bitrate',    '128000')
     insertConfig.run('opus_stereo',     'true')
     insertConfig.run('opus_fec',        'true')
-    insertConfig.run('sip_port',        '7060')
+    insertConfig.run('sip_port',          '7060')
+    insertConfig.run('login_max_attempts',  '10')
+    insertConfig.run('login_window_minutes','15')
+    insertConfig.run('password_min_length', '12')
   })()
 
   // Always exactly one SIP account (id=1) — both credentials app-generated
