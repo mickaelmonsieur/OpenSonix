@@ -1,6 +1,74 @@
-import { useState }     from 'react'
-import { useNavigate }  from 'react-router-dom'
-import { useAuth }      from '../App.jsx'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate }                       from 'react-router-dom'
+import { useAuth }                           from '../App.jsx'
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function fmtUptime(s) {
+  const d = Math.floor(s / 86400)
+  const h = Math.floor((s % 86400) / 3600)
+  const m = Math.floor((s % 3600) / 60)
+  const parts = []
+  if (d) parts.push(`${d}j`)
+  if (h || d) parts.push(`${h}h`)
+  parts.push(`${m}m`)
+  return parts.join(' ')
+}
+
+function fmtMem(bytes) { return `${Math.round(bytes / 1024 / 1024)} Mo` }
+
+function fmtLoad(v) { return v == null ? '—' : v.toFixed(2) }
+
+// ── SystemInfo ────────────────────────────────────────────────────────────────
+
+function InfoRow({ label, value }) {
+  return (
+    <tr>
+      <td style={{ color: '#666', whiteSpace: 'nowrap', paddingRight: '1rem', paddingBottom: '.3rem', verticalAlign: 'top' }}>{label}</td>
+      <td style={{ fontFamily: 'monospace', fontSize: '.85rem', paddingBottom: '.3rem' }}>{value ?? '—'}</td>
+    </tr>
+  )
+}
+
+function SystemInfo({ apiFetch }) {
+  const [info, setInfo] = useState(null)
+
+  const load = useCallback(() => {
+    apiFetch('/api/system/info').then(r => r.json()).then(setInfo).catch(() => {})
+  }, [apiFetch])
+
+  useEffect(() => {
+    load()
+    const t = setInterval(load, 5000)
+    return () => clearInterval(t)
+  }, [load])
+
+  if (!info) return <p style={{ fontSize: '.85rem', color: '#888' }}>Chargement…</p>
+
+  const usedMem = info.memory.total - info.memory.free
+  const netLabel = info.network.iface
+    ? `${info.network.iface} — ${info.network.state === 'up' ? (info.network.speed ? `${info.network.speed} Mbps` : 'up') : info.network.state}`
+    : '—'
+
+  const datetime = info.datetime
+    ? new Date(info.datetime).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'medium' })
+    : '—'
+
+  return (
+    <table style={{ borderCollapse: 'collapse', fontSize: '.88rem', width: '100%' }}>
+      <tbody>
+        <InfoRow label="Uptime"         value={fmtUptime(info.uptime)} />
+        <InfoRow label="Charge (1/5/15m)" value={`${fmtLoad(info.load.m1)} / ${fmtLoad(info.load.m5)} / ${fmtLoad(info.load.m15)}`} />
+        <InfoRow label="Cœurs CPU"      value={info.cpus} />
+        <InfoRow label="Mémoire"        value={`${fmtMem(usedMem)} utilisés / ${fmtMem(info.memory.total)} total`} />
+        <InfoRow label="Réseau"         value={netLabel} />
+        <InfoRow label="Date / heure"   value={datetime} />
+        <InfoRow label="OS"             value={info.osName} />
+        <InfoRow label="Firmware"       value={info.fwVersion ?? 'dev'} />
+      </tbody>
+    </table>
+  )
+}
 
 function Banner({ ok, message, onDismiss }) {
   if (!message) return null
@@ -17,7 +85,7 @@ function Banner({ ok, message, onDismiss }) {
 
 export default function System() {
   const { apiFetch } = useAuth()
-  const navigate     = useNavigate()
+  const navigate      = useNavigate()
   const [banner, setBanner] = useState(null)
   const [busy,   setBusy]   = useState(false)
 
@@ -44,6 +112,14 @@ export default function System() {
       <h2 className="page-title">Système</h2>
 
       <Banner {...(banner ?? {})} onDismiss={() => setBanner(null)} />
+
+      {/* ── Informations système ─────────────────────────────────────────── */}
+      <div className="card">
+        <div className="card-header">Informations système</div>
+        <div className="card-body">
+          <SystemInfo apiFetch={apiFetch} />
+        </div>
+      </div>
 
       {/* ── Sécurité ─────────────────────────────────────────────────────── */}
       <div className="card">

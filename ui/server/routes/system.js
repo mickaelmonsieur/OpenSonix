@@ -1,6 +1,8 @@
 import { execFile as _execFile } from 'node:child_process'
+import { readFile }              from 'node:fs/promises'
 import { promisify }             from 'node:util'
 import { randomBytes }           from 'node:crypto'
+import os                        from 'node:os'
 import bcrypt                    from 'bcrypt'
 import db                        from '../db.js'
 import { writeNetworkConfig }    from '../network.js'
@@ -21,9 +23,59 @@ const DEFAULT_CONFIG = [
   ['sip_port',        '7060'],
 ]
 
+// ── helpers ──────────────────────────────────────────────────────────────────
+
+async function readText(path) {
+  try { return (await readFile(path, 'utf8')).trim() } catch { return null }
+}
+
+async function getSystemInfo() {
+  const [load1, load5, load15] = os.loadavg()
+  const totalMem = os.totalmem()
+  const freeMem  = os.freemem()
+
+  // Network: prefer eth0 then wlan0
+  let netIface = null, netState = null, netSpeed = null
+  for (const iface of ['eth0', 'wlan0']) {
+    const state = await readText(`/sys/class/net/${iface}/operstate`)
+    if (state) {
+      netIface = iface
+      netState = state
+      const s = parseInt(await readText(`/sys/class/net/${iface}/speed`) ?? '', 10)
+      if (s > 0) netSpeed = s
+      break
+    }
+  }
+
+  // OS pretty name from /etc/os-release
+  let osName = null
+  const osRelease = await readText('/etc/os-release')
+  if (osRelease) {
+    const m = osRelease.match(/^PRETTY_NAME="(.+)"$/m)
+    if (m) osName = m[1]
+  }
+
+  // Firmware version written at image build time
+  const fwVersion = await readText('/etc/opensonix-release')
+
+  return {
+    uptime:  os.uptime(),
+    load:    { m1: load1, m5: load5, m15: load15 },
+    cpus:    os.cpus().length,
+    memory:  { total: totalMem, free: freeMem },
+    network: { iface: netIface, state: netState, speed: netSpeed },
+    datetime: new Date().toISOString(),
+    osName,
+    fwVersion,
+  }
+}
+
 export default async function systemRoutes(fastify) {
   fastify.addHook('preHandler', authenticate)
   fastify.addHook('preHandler', requirePasswordChanged)
+
+  // GET /api/system/info
+  fastify.get('/info', async () => getSystemInfo())
 
   // POST /api/system/reboot
   fastify.post('/reboot', async () => {

@@ -44,6 +44,7 @@ jobs:
           cp -r ui             image/stage-opensonix/files/ui
           cp -r systemd        image/stage-opensonix/files/systemd
           cp -r baresip-config image/stage-opensonix/files/baresip-config
+          echo "${{ github.ref_name }}" > image/stage-opensonix/files/opensonix-release
 
           cp -r image/stage-opensonix pi-gen/stage-opensonix
 
