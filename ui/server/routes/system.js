@@ -94,43 +94,134 @@ async function getSystemInfo() {
 async function buildReport() {
   const run = async (cmd, args) => {
     try {
-      const { stdout, stderr } = await execFile(cmd, args)
+      const { stdout, stderr } = await execFile(cmd, args, { timeout: 10000 })
       return (stdout + stderr).trim()
     } catch (e) {
-      return e.stdout?.trim() || e.stderr?.trim() || `[error: ${e.message}]`
+      return e.stdout?.trim() || e.stderr?.trim() || `[erreur: ${e.message}]`
     }
   }
 
-  const section = (title, content) =>
-    `### ${title}\n\`\`\`\n${content || '(empty)'}\n\`\`\``
+  const sec = (title, content) =>
+    `### ${title}\n\`\`\`\n${content || '(vide)'}\n\`\`\``
 
-  const fw      = await readText('/etc/opensonix-release')
-  const osRel   = await readText('/etc/os-release')
-  const cpuinfo = await readText('/proc/cpuinfo')
-
-  const [uname, freeMem, uptime, lsblk, dpkgList] = await Promise.all([
-    run('uname',  ['-a']),
-    run('free',   ['-m']),
-    run('uptime', []),
-    run('lsblk',  ['-o', 'NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT']),
-    run('dpkg',   ['-l']),
+  // Reads
+  const [fw, osRel, cpuinfo, asoundCards, meminfo] = await Promise.all([
+    readText('/etc/opensonix-release'),
+    readText('/etc/os-release'),
+    readText('/proc/cpuinfo'),
+    readText('/proc/asound/cards'),
+    readText('/proc/meminfo'),
   ])
 
-  const lines = [
+  // OpenSonix config from DB (no passwords)
+  let opensonixCfg = ''
+  try {
+    const rows = db.prepare('SELECT key, value FROM config').all()
+    opensonixCfg = rows.map(r => `${r.key} = ${r.value}`).join('\n')
+    const sip = db.prepare('SELECT username, registrar, remote_user FROM sip_account WHERE id = 1').get()
+    if (sip) {
+      opensonixCfg += `\nsip_username = ${sip.username ?? '—'}`
+      opensonixCfg += `\nsip_registrar = ${sip.registrar ?? '—'}`
+      opensonixCfg += `\nsip_remote_user = ${sip.remote_user ?? '—'}`
+    }
+  } catch {}
+
+  // Commands — run in parallel by group to keep total time reasonable
+  const [
+    uname, uptimeOut, hostname,
+    ipAddr, ipRoute, ipStats, ssOut,
+    freeOut, dfOut, lsblkOut,
+    aplayOut, arecordOut, amixerOut,
+    psOut,
+    baresipStatus, uiStatus,
+    baresipLog, uiLog, dmesgOut,
+    dpkgList,
+    vcTemp, vcThrottle,
+  ] = await Promise.all([
+    // system
+    run('uname',    ['-a']),
+    run('uptime',   []),
+    run('hostname', ['-f']),
+    // network
+    run('ip', ['addr']),
+    run('ip', ['route']),
+    run('ip', ['-s', 'link']),
+    run('ss', ['-tuln']),
+    // memory / storage
+    run('free',  ['-m']),
+    run('df',    ['-h']),
+    run('lsblk', ['-o', 'NAME,SIZE,TYPE,FSTYPE,MOUNTPOINT']),
+    // audio
+    run('aplay',   ['-l']),
+    run('arecord', ['-l']),
+    run('amixer',  []),
+    // processes
+    run('ps', ['aux']),
+    // services
+    run('systemctl', ['status', 'baresip',        '--no-pager', '-l']),
+    run('systemctl', ['status', 'opensonix-ui',   '--no-pager', '-l']),
+    // logs
+    run('journalctl', ['-n', '100', '-u', 'baresip',       '--no-pager']),
+    run('journalctl', ['-n', '100', '-u', 'opensonix-ui',  '--no-pager']),
+    run('sh', ['-c', 'dmesg | tail -50']),
+    // packages
+    run('dpkg', ['-l']),
+    // Raspberry Pi specific (fails gracefully on non-Pi)
+    run('vcgencmd', ['measure_temp']),
+    run('vcgencmd', ['get_throttled']),
+  ])
+
+  return [
     `## OpenSonix — Rapport de diagnostic`,
     `Généré le : ${new Date().toISOString()}`,
     `Firmware   : ${fw ?? 'dev'}`,
+    `Hostname   : ${hostname}`,
     '',
-    section('uname -a',        uname),
-    section('uptime',          uptime),
-    section('free -m',         freeMem),
-    section('/etc/os-release', osRel),
-    section('/proc/cpuinfo',   cpuinfo),
-    section('lsblk',           lsblk),
-    section('dpkg -l',         dpkgList),
-  ]
-
-  return lines.join('\n\n')
+    `---`,
+    `## Système`,
+    sec('uname -a',          uname),
+    sec('uptime',            uptimeOut),
+    sec('/etc/os-release',   osRel),
+    sec('/proc/cpuinfo',     cpuinfo),
+    sec('vcgencmd measure_temp',  vcTemp),
+    sec('vcgencmd get_throttled', vcThrottle),
+    '',
+    `## Mémoire / Stockage`,
+    sec('free -m',           freeOut),
+    sec('/proc/meminfo',     meminfo),
+    sec('df -h',             dfOut),
+    sec('lsblk',             lsblkOut),
+    '',
+    `## Réseau`,
+    sec('ip addr',           ipAddr),
+    sec('ip route',          ipRoute),
+    sec('ip -s link (trafic)', ipStats),
+    sec('ss -tuln (ports)',  ssOut),
+    '',
+    `## Audio / ALSA`,
+    sec('/proc/asound/cards', asoundCards),
+    sec('aplay -l',          aplayOut),
+    sec('arecord -l',        arecordOut),
+    sec('amixer',            amixerOut),
+    '',
+    `## Processus`,
+    sec('ps aux',            psOut),
+    '',
+    `## Services`,
+    sec('systemctl status baresip',       baresipStatus),
+    sec('systemctl status opensonix-ui',  uiStatus),
+    '',
+    `## Logs`,
+    sec('journalctl baresip (100 dernières lignes)',      baresipLog),
+    sec('journalctl opensonix-ui (100 dernières lignes)', uiLog),
+    sec('dmesg (50 dernières lignes)',                    dmesgOut),
+    '',
+    `## Configuration OpenSonix`,
+    sec('config',            opensonixCfg),
+    '',
+    `## Paquets installés`,
+    sec('dpkg -l',           dpkgList),
+  ].join('\n\n')
 }
 
 export default async function systemRoutes(fastify) {

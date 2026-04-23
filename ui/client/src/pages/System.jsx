@@ -127,28 +127,27 @@ function DiagReport({ apiFetch }) {
   return (
     <div>
       <p style={{ fontSize: '.88rem', color: '#444', marginBottom: '.75rem' }}>
-        Génère un rapport de diagnostic à coller dans une{' '}
-        <a href="https://github.com/mickaelmonsieur/OpenSonix/issues" target="_blank" rel="noreferrer">GitHub Issue</a>.
+        Génère un rapport complet à coller dans une{' '}
+        <a href="https://github.com/mickaelmonsieur/OpenSonix/issues" target="_blank" rel="noreferrer">GitHub Issue</a>
+        {' '}(réseau, audio, processus, logs, paquets…).
       </p>
       <div className="btn-group" style={{ marginBottom: '.75rem' }}>
         <button className="btn btn-primary" onClick={generate} disabled={loading}>
-          {loading ? 'Génération…' : 'Générer le rapport'}
+          {loading ? 'Génération en cours…' : report ? 'Regénérer' : 'Générer le rapport'}
         </button>
-        {report && (
-          <button className="btn" onClick={copy}>
-            {copied ? '✓ Copié' : 'Copier'}
-          </button>
-        )}
+        <button className="btn" onClick={copy} disabled={!report}>
+          {copied ? '✓ Copié' : 'Copier'}
+        </button>
       </div>
       {report && (
         <textarea
           readOnly
           value={report}
-          rows={20}
+          rows={24}
           style={{
-            width: '100%', fontFamily: 'monospace', fontSize: '.75rem',
+            width: '100%', fontFamily: 'monospace', fontSize: '.73rem',
             border: '1px solid #bbb', padding: '.5rem', resize: 'vertical',
-            background: '#f8f8f8', color: '#222', lineHeight: 1.4,
+            background: '#f8f8f8', color: '#222', lineHeight: 1.45,
           }}
         />
       )}
