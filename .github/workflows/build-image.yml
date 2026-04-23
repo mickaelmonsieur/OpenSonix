@@ -57,7 +57,7 @@ jobs:
       - name: Write pi-gen config
         run: |
           {
-            echo "IMG_NAME=opensonix"
+            echo "IMG_NAME=opensonix-${{ github.ref_name }}"
             echo "RELEASE=bookworm"
             echo "DEPLOY_COMPRESSION=xz"
             echo "TARGET_HOSTNAME=opensonix"
@@ -130,11 +130,11 @@ jobs:
             sudo dd if=${IMAGE_NAME%.xz} of=/dev/sdX bs=4M status=progress
             ```
 
-            ### Premier accès
+            ### First login
 
-            | | Identifiant | Mot de passe |
+            | | Username | Password |
             |---|---|---|
-            | Interface web | `http://opensonix.local` → `admin` | `opensonix` ⚠ changez-le |
-            | Console physique | `opensonix` | `opensonix` ⚠ changez-le |
+            | Web interface | `http://opensonix.local` → `admin` | `opensonix` ⚠ change it |
+            | Physical console | `opensonix` | `opensonix` ⚠ change it |
 
           files: ${{ env.IMAGE_PATH }}
