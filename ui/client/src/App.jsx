@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import Dashboard      from './pages/Dashboard.jsx'
 import Config         from './pages/Config.jsx'
 import Network        from './pages/Network.jsx'
+import System         from './pages/System.jsx'
 import ChangePassword from './pages/ChangePassword.jsx'
 
 // ── Auth context ─────────────────────────────────────────────────────────────
@@ -115,6 +116,7 @@ function Navbar() {
         <NavLink to="/"        end>Dashboard</NavLink>
         <NavLink to="/config"     >Config</NavLink>
         <NavLink to="/network"    >Network</NavLink>
+        <NavLink to="/system"     >System</NavLink>
       </div>
       <button className="navbar-logout" onClick={handleLogout}>Logout</button>
     </nav>
@@ -209,6 +211,7 @@ export default function App() {
               <Route path="/"       element={<Dashboard />} />
               <Route path="/config" element={<Config />} />
               <Route path="/network" element={<Network />} />
+              <Route path="/system" element={<System />} />
               <Route path="*"       element={<Navigate to="/" replace />} />
             </Routes>
           </RequireComplete>

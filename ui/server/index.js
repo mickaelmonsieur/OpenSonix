@@ -15,6 +15,7 @@ import authRoutes    from './routes/auth.js'
 import callRoutes    from './routes/call.js'
 import configRoutes  from './routes/config.js'
 import networkRoutes from './routes/network.js'
+import systemRoutes  from './routes/system.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PORT      = parseInt(process.env.PORT ?? '80', 10)
@@ -40,6 +41,7 @@ await fastify.register(authRoutes,    { prefix: '/api/auth' })
 await fastify.register(callRoutes,    { prefix: '/api/call' })
 await fastify.register(configRoutes,  { prefix: '/api' })
 await fastify.register(networkRoutes, { prefix: '/api/network' })
+await fastify.register(systemRoutes,  { prefix: '/api/system' })
 
 // ── WebSocket /ws — server-push events to the browser ────────────────────────
 
