@@ -30,20 +30,39 @@ function DaemonBadge({ connected }) {
     : <span className="badge red">HORS LIGNE</span>
 }
 
+function VuBar({ value }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value ?? 0)) * 100)
+  return (
+    <div className="vu-track">
+      <div className="vu-dim" style={{ width: `${100 - pct}%` }} />
+    </div>
+  )
+}
+
+function VuChannel({ ch, value }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value ?? 0)) * 100)
+  return (
+    <div className="vu-row">
+      <span className="vu-ch">{ch}</span>
+      <VuBar value={value} />
+      <span className="vu-pct">{pct}%</span>
+    </div>
+  )
+}
+
 function VuMeter({ tx, rx }) {
-  const pctIn  = Math.round(Math.min(1, Math.max(0, tx)) * 100)
-  const pctOut = Math.round(Math.min(1, Math.max(0, rx)) * 100)
+  // Server sends scalar values from amixer (mono). L = R until server sends stereo.
   return (
     <div>
-      <div className="vu-row">
-        <span className="vu-label">IN</span>
-        <div className="vu-track"><div className="vu-bar"    style={{ width: `${pctIn}%`  }} /></div>
-        <span className="vu-pct">{pctIn}%</span>
+      <div className="vu-section">
+        <div className="vu-section-label">IN</div>
+        <VuChannel ch="L" value={tx} />
+        <VuChannel ch="R" value={tx} />
       </div>
-      <div className="vu-row">
-        <span className="vu-label">OUT</span>
-        <div className="vu-track"><div className="vu-bar rx" style={{ width: `${pctOut}%` }} /></div>
-        <span className="vu-pct">{pctOut}%</span>
+      <div className="vu-section">
+        <div className="vu-section-label">OUT</div>
+        <VuChannel ch="L" value={rx} />
+        <VuChannel ch="R" value={rx} />
       </div>
     </div>
   )
