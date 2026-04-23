@@ -1,6 +1,7 @@
 import baresip                              from '../baresip.js'
 import { authenticate, requirePasswordChanged } from '../auth.js'
 import { state }                           from '../state.js'
+import { notifyManualHangup, notifyManualDial } from '../watchdog.js'
 
 export default async function callRoutes(fastify) {
   fastify.addHook('preHandler', authenticate)
@@ -18,6 +19,7 @@ export default async function callRoutes(fastify) {
     },
   }, async (req, reply) => {
     if (!baresip.connected) return reply.code(503).send({ error: 'baresip not connected' })
+    notifyManualDial()
     await baresip.send('dial', req.body.uri)
     return { ok: true }
   })
@@ -25,6 +27,7 @@ export default async function callRoutes(fastify) {
   // POST /api/call/hangup
   fastify.post('/hangup', async (req, reply) => {
     if (!baresip.connected) return reply.code(503).send({ error: 'baresip not connected' })
+    notifyManualHangup()
     await baresip.send('hangup')
     return { ok: true }
   })

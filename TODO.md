@@ -4,6 +4,26 @@ Features not yet implemented, in no particular order of priority.
 
 ---
 
+## Statistiques de lien (métriques ctrl_tcp baresip)
+
+Afficher les métriques de qualité du lien en temps réel dans le Dashboard.
+
+baresip expose via `ctrl_tcp` :
+- commande `callstat` → jitter (ms), perte de paquets (%), RTT (ms), débit TX/RX
+- commande `austat`   → statistiques audio (underrun, overrun)
+
+Implémentation côté serveur :
+- Pendant un appel établi, interroger `callstat` toutes les 2–5 s via `baresip.send('callstat')`
+- Pousser les données au frontend via le WebSocket (`{ type: 'call:stats', data: {...} }`)
+
+Implémentation côté UI :
+- Panneau dans le Dashboard, visible uniquement en appel établi
+- Afficher jitter, perte paquets, RTT sous forme de valeurs numériques + indicateur coloré
+  (vert / orange / rouge selon des seuils broadcast : jitter < 5 ms, perte < 0.1 %)
+- Historique graphique (sparkline 60 s) optionnel
+
+---
+
 ## Monitoring SNMP
 
 Expose device status via SNMP (read-only agent) so broadcast engineers can

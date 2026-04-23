@@ -10,6 +10,7 @@ import { verifyAccess }           from './auth.js'
 import db                         from './db.js'
 import { getAudioLevels }         from './alsa.js'
 import './state.js'                    // side-effect: registers baresip event handlers
+import './watchdog.js'               // side-effect: auto-reconnect for SENDER mode
 
 import authRoutes    from './routes/auth.js'
 import callRoutes    from './routes/call.js'
