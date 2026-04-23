@@ -107,6 +107,9 @@ function seed() {
     insertConfig.run('login_max_attempts',  '10')
     insertConfig.run('login_window_minutes','15')
     insertConfig.run('password_min_length', '12')
+    insertConfig.run('timezone',            'Europe/Paris')
+    insertConfig.run('ntp_server_1',        '0.europe.pool.ntp.org')
+    insertConfig.run('ntp_server_2',        '1.europe.pool.ntp.org')
   })()
 
   // Always exactly one SIP account (id=1) — both credentials app-generated

@@ -17,4 +17,5 @@ install -m 644 "${STAGE_DIR}/files/systemd/opensonix-ui.service" "${ROOTFS_DIR}/
 on_chroot << 'EOF'
 systemctl enable baresip
 systemctl enable opensonix-ui
+systemctl enable chrony
 EOF

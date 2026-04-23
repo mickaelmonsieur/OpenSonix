@@ -7,5 +7,6 @@ apt-get install -y --no-install-recommends \
     nodejs \
     npm \
     build-essential \
-    python3
+    python3 \
+    chrony
 EOF

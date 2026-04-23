@@ -86,6 +86,82 @@ function SystemInfo({ apiFetch }) {
   )
 }
 
+function DateTimeConfig({ apiFetch }) {
+  const [timezones, setTimezones] = useState([])
+  const [tz,        setTz]        = useState('')
+  const [ntp1,      setNtp1]      = useState('')
+  const [ntp2,      setNtp2]      = useState('')
+  const [tzSaved,   setTzSaved]   = useState(false)
+  const [ntpSaved,  setNtpSaved]  = useState(false)
+  const [loading,   setLoading]   = useState(true)
+
+  useEffect(() => {
+    Promise.all([
+      apiFetch('/api/system/timezones').then(r => r.json()),
+      apiFetch('/api/system/clock').then(r => r.json()),
+    ]).then(([tzData, clockData]) => {
+      setTimezones(tzData.timezones ?? [])
+      setTz(clockData.timezone)
+      setNtp1(clockData.ntp_server_1)
+      setNtp2(clockData.ntp_server_2)
+      setLoading(false)
+    }).catch(() => setLoading(false))
+  }, [apiFetch])
+
+  const saveTz = async () => {
+    await apiFetch('/api/system/timezone', { method: 'POST', body: JSON.stringify({ timezone: tz }) })
+    setTzSaved(true); setTimeout(() => setTzSaved(false), 2000)
+  }
+
+  const saveNtp = async () => {
+    await apiFetch('/api/system/ntp', { method: 'POST', body: JSON.stringify({ server1: ntp1, server2: ntp2 }) })
+    setNtpSaved(true); setTimeout(() => setNtpSaved(false), 2000)
+  }
+
+  const sectionLabel = {
+    fontSize: '.72rem', fontWeight: 700, color: '#888',
+    textTransform: 'uppercase', letterSpacing: '.08em', marginBottom: '.5rem',
+  }
+
+  if (loading) return <p style={{ fontSize: '.85rem', color: '#888' }}>Chargement…</p>
+
+  return (
+    <>
+      {/* ── Fuseau horaire ── */}
+      <div style={{ marginBottom: '1rem' }}>
+        <div style={sectionLabel}>Fuseau horaire</div>
+        <div style={{ display: 'flex', gap: '.5rem', alignItems: 'center' }}>
+          <select value={tz} onChange={e => setTz(e.target.value)}
+            style={{ flex: 1, fontFamily: 'monospace', fontSize: '.88rem',
+                     border: '1px solid #bbb', padding: '.3rem .4rem' }}>
+            {timezones.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+          <button className="btn btn-primary" onClick={saveTz}>
+            {tzSaved ? '✓ Appliqué' : 'Appliquer'}
+          </button>
+        </div>
+      </div>
+
+      {/* ── Serveurs NTP ── */}
+      <div style={{ borderTop: '1px solid #e8e8e8', paddingTop: '.85rem' }}>
+        <div style={sectionLabel}>Serveurs NTP</div>
+        {[ntp1, ntp2].map((v, i) => (
+          <input key={i} type="text" value={v}
+            onChange={e => i === 0 ? setNtp1(e.target.value) : setNtp2(e.target.value)}
+            style={{ display: 'block', width: '100%', marginBottom: '.4rem',
+                     fontFamily: 'monospace', fontSize: '.88rem',
+                     border: '1px solid #bbb', padding: '.3rem .4rem',
+                     boxSizing: 'border-box' }}
+          />
+        ))}
+        <button className="btn btn-primary" onClick={saveNtp} style={{ marginTop: '.1rem' }}>
+          {ntpSaved ? '✓ Appliqué' : 'Appliquer'}
+        </button>
+      </div>
+    </>
+  )
+}
+
 function SecurityConfig({ apiFetch }) {
   const FIELDS = [
     { key: 'login_max_attempts',   label: 'Tentatives max avant blocage', min: 1,  max: 100, unit: 'tentatives' },
@@ -259,6 +335,14 @@ export default function System() {
         <div className="card-header">Rapport de diagnostic</div>
         <div className="card-body">
           <DiagReport apiFetch={apiFetch} />
+        </div>
+      </div>
+
+      {/* ── Date & heure ─────────────────────────────────────────────────── */}
+      <div className="card">
+        <div className="card-header">Date &amp; heure</div>
+        <div className="card-body">
+          <DateTimeConfig apiFetch={apiFetch} />
         </div>
       </div>
 
