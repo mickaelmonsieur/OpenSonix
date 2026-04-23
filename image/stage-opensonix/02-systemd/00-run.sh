@@ -1,8 +1,12 @@
 #!/bin/bash -e
 
 on_chroot << 'EOF'
-id -u baresip   &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin baresip
-id -u opensonix &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin opensonix
+getent group baresip   || groupadd --system baresip
+getent group opensonix || groupadd --system opensonix
+
+id -u baresip   &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin --ingroup baresip   baresip
+id -u opensonix &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin --ingroup opensonix opensonix
+
 usermod -aG audio baresip
 usermod -aG audio opensonix
 EOF
