@@ -20,7 +20,26 @@ systemctl enable opensonix-ui
 systemctl enable chrony
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
-# userconfig runs a first-boot interactive dialog that requires packages from
-# stage2+ (desktop). Mask it — OpenSonix configures everything via the web UI.
-systemctl mask userconfig.service
+
+# ── Mask unnecessary services ─────────────────────────────────────────────────
+# ln -sf is used instead of systemctl mask so it works reliably in a chroot
+# regardless of whether the unit file is already installed.
+# avahi-daemon is intentionally kept: it provides opensonix.local mDNS.
+for unit in \
+    userconfig.service \
+    systemd-timesyncd.service \
+    bluetooth.service \
+    wpa_supplicant.service \
+    ModemManager.service \
+    triggerhappy.service \
+    dphys-swapfile.service \
+    rsyslog.service \
+    apt-daily.service \
+    apt-daily-upgrade.service \
+    apt-daily.timer \
+    apt-daily-upgrade.timer \
+    man-db.timer \
+    e2scrub_all.timer; do
+    ln -sf /dev/null "/etc/systemd/system/${unit}"
+done
 EOF
