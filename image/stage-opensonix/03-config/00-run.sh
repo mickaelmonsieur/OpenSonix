@@ -24,6 +24,19 @@ echo "opensonix ALL=(ALL) NOPASSWD: ALL" \
     > "${ROOTFS_DIR}/etc/sudoers.d/010_opensonix-nopasswd"
 chmod 440 "${ROOTFS_DIR}/etc/sudoers.d/010_opensonix-nopasswd"
 
+# ── Network (systemd-networkd) ────────────────────────────────────────────────
+mkdir -p "${ROOTFS_DIR}/etc/systemd/network"
+cat > "${ROOTFS_DIR}/etc/systemd/network/10-eth0.network" << 'NETEOF'
+[Match]
+Name=eth0
+
+[Network]
+DHCP=yes
+NETEOF
+
+# Point resolv.conf to systemd-resolved stub
+ln -sf /run/systemd/resolve/stub-resolv.conf "${ROOTFS_DIR}/etc/resolv.conf"
+
 # ── NTP (chrony) ──────────────────────────────────────────────────────────────
 # Install default config with European NTP pool servers.
 cat > "${ROOTFS_DIR}/etc/chrony/chrony.conf" << 'CHRONYEOF'

@@ -4,69 +4,59 @@ import { promisify } from 'node:util'
 
 const execFile = promisify(_execFile)
 
-const DHCPCD_CONF = '/etc/dhcpcd.conf'
-
-// Regex that matches the static block we inject/remove
-const STATIC_RE = /\ninterface eth0\n(?:static [^\n]+\n)*/g
+const NETWORK_FILE = '/etc/systemd/network/10-eth0.network'
+const HOSTNAME_FILE = '/etc/hostname'
 
 export async function readNetworkConfig() {
+  let hostname = ''
+  try { hostname = (await readFile(HOSTNAME_FILE, 'utf8')).trim() } catch {}
+
   let content
   try {
-    content = await readFile(DHCPCD_CONF, 'utf8')
+    content = await readFile(NETWORK_FILE, 'utf8')
   } catch {
-    return { mode: 'dhcp', ip: '', mask: '', gateway: '', dns1: '', dns2: '', hostname: '' }
+    return { mode: 'dhcp', ip: '', mask: '', gateway: '', dns1: '', dns2: '', hostname }
   }
 
-  const hostnameMatch = content.match(/^hostname\s+(.+)$/m)
-  const hostname      = hostnameMatch ? hostnameMatch[1].trim() : ''
-
-  const staticMatch = content.match(
-    /interface eth0\s+static ip_address=([^\s/]+)\/(\d+)\s+static routers=([^\n]+)\s+static domain_name_servers=([^\n]+)/
-  )
-  if (staticMatch) {
-    const [, ip, prefix, gateway, dnsLine] = staticMatch
-    const [dns1 = '', dns2 = ''] = dnsLine.trim().split(/\s+/)
-    return { mode: 'static', ip, mask: prefixToMask(Number(prefix)), gateway: gateway.trim(), dns1, dns2, hostname }
+  if (/^\s*DHCP\s*=\s*yes/mi.test(content)) {
+    return { mode: 'dhcp', ip: '', mask: '', gateway: '', dns1: '', dns2: '', hostname }
   }
 
-  return { mode: 'dhcp', ip: '', mask: '', gateway: '', dns1: '', dns2: '', hostname }
+  const addrMatch  = content.match(/^\s*Address\s*=\s*([^/\s]+)\/(\d+)/mi)
+  const gwMatch    = content.match(/^\s*Gateway\s*=\s*(\S+)/mi)
+  const dnsAll     = [...content.matchAll(/^\s*DNS\s*=\s*(\S+)/gmi)]
+
+  return {
+    mode:    'static',
+    ip:      addrMatch?.[1] ?? '',
+    mask:    addrMatch ? prefixToMask(Number(addrMatch[2])) : '',
+    gateway: gwMatch?.[1] ?? '',
+    dns1:    dnsAll[0]?.[1] ?? '',
+    dns2:    dnsAll[1]?.[1] ?? '',
+    hostname,
+  }
 }
 
 export async function writeNetworkConfig({ mode, ip, mask, gateway, dns1, dns2, hostname }) {
   let content
-  try {
-    content = await readFile(DHCPCD_CONF, 'utf8')
-  } catch {
-    content = ''
-  }
-
-  // Strip any existing static block
-  content = content.replace(STATIC_RE, '')
-
-  // Update/insert hostname directive
-  if (hostname) {
-    if (/^hostname\s+/m.test(content)) {
-      content = content.replace(/^hostname\s+.+$/m, `hostname ${hostname}`)
-    } else {
-      content = `hostname ${hostname}\n` + content
-    }
-  }
-
   if (mode === 'static') {
-    const prefix     = maskToPrefix(mask)
-    const dnsServers = [dns1, dns2].filter(Boolean).join(' ')
-    content +=
-      `\ninterface eth0\n` +
-      `static ip_address=${ip}/${prefix}\n` +
-      `static routers=${gateway}\n` +
-      `static domain_name_servers=${dnsServers}\n`
+    const prefix   = maskToPrefix(mask)
+    const dnsLines = [dns1, dns2].filter(Boolean).map(d => `DNS=${d}`).join('\n')
+    content = `[Match]\nName=eth0\n\n[Network]\nAddress=${ip}/${prefix}\nGateway=${gateway}\n${dnsLines}\n`
+  } else {
+    content = '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\n'
   }
 
-  await writeFile(DHCPCD_CONF, content, 'utf8')
+  await writeFile(NETWORK_FILE, content, 'utf8')
 
-  // Restart dhcpcd asynchronously — IP may change, caller must warn the user
-  execFile('systemctl', ['restart', 'dhcpcd'])
-    .catch(err => console.error('[network] dhcpcd restart failed:', err.message))
+  if (hostname) {
+    await writeFile(HOSTNAME_FILE, hostname + '\n', 'utf8')
+    execFile('hostnamectl', ['set-hostname', hostname]).catch(() => {})
+  }
+
+  // Fire-and-forget — IP may change, caller warns the user
+  execFile('systemctl', ['restart', 'systemd-networkd'])
+    .catch(err => console.error('[network] systemd-networkd restart failed:', err.message))
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
