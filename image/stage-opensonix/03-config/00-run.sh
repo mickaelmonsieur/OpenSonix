@@ -19,6 +19,11 @@ chown -R opensonix:opensonix /opt/opensonix
 chown    opensonix:opensonix /var/lib/opensonix
 EOF
 
+# ── Sudo (NOPASSWD — opensonix-ui service runs systemctl, timedatectl, etc.) ──
+echo "opensonix ALL=(ALL) NOPASSWD: ALL" \
+    > "${ROOTFS_DIR}/etc/sudoers.d/010_opensonix-nopasswd"
+chmod 440 "${ROOTFS_DIR}/etc/sudoers.d/010_opensonix-nopasswd"
+
 # ── NTP (chrony) ──────────────────────────────────────────────────────────────
 # Install default config with European NTP pool servers.
 cat > "${ROOTFS_DIR}/etc/chrony/chrony.conf" << 'CHRONYEOF'
