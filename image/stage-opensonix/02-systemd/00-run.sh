@@ -18,6 +18,7 @@ on_chroot << 'EOF'
 systemctl enable baresip
 systemctl enable opensonix-ui
 systemctl enable chrony
+systemctl enable dhcpcd
 # userconfig runs a first-boot interactive dialog that requires packages from
 # stage2+ (desktop). Mask it — OpenSonix configures everything via the web UI.
 systemctl mask userconfig.service

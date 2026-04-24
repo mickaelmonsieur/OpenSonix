@@ -8,5 +8,6 @@ apt-get install -y --no-install-recommends \
     npm \
     build-essential \
     python3 \
-    chrony
+    chrony \
+    dhcpcd5
 EOF
