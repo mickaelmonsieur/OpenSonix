@@ -33,9 +33,11 @@ Name=eth0
 [Network]
 DHCP=yes
 NETEOF
-
-# Point resolv.conf to systemd-resolved stub
-ln -sf /run/systemd/resolve/stub-resolv.conf "${ROOTFS_DIR}/etc/resolv.conf"
+# Note: resolv.conf is intentionally NOT set to a symlink here.
+# Creating a dangling symlink during build breaks DNS in subsequent pi-gen
+# stages (export-image). Pi-gen copies the host resolv.conf into the image;
+# the host runner uses 127.0.0.53, which maps to our systemd-resolved on
+# the Pi at runtime.
 
 # ── NTP (chrony) ──────────────────────────────────────────────────────────────
 # Install default config with European NTP pool servers.
