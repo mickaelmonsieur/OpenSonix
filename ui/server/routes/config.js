@@ -57,6 +57,7 @@ function renderBaresipConf(cfg) {
     `opus_stereo      ${cfg.opus_stereo === 'true' ? 'yes' : 'no'}`,
     `opus_inbandFEC   ${cfg.opus_fec    === 'true' ? 'yes' : 'no'}`,
     ``,
+    `module_path      /usr/lib/baresip/modules`,
     `module           ctrl_tcp.so`,
     `module           opus.so`,
     `module           alsa.so`,
@@ -84,9 +85,9 @@ export async function applyBaresipConfig() {
       writeFile(BARESIP_CONF,     renderBaresipConf(cfg)),
       writeFile(BARESIP_ACCOUNTS, renderBaresipAccounts(cfg, sip)),
     ])
-    await execFile('systemctl', ['reload', 'baresip'])
+    await execFile('sudo', ['systemctl', 'restart', 'baresip'])
   } catch (err) {
-    console.error('[config] baresip reload skipped:', err.message)
+    console.error('[config] baresip restart skipped:', err.message)
   }
 }
 

@@ -54,6 +54,7 @@ CHRONYEOF
 # ── SSH hardening ─────────────────────────────────────────────────────────────
 # Disable password auth — keys only.
 mkdir -p "${ROOTFS_DIR}/etc/ssh/sshd_config.d"
+rm -f "${ROOTFS_DIR}/etc/ssh/sshd_config.d/rename_user.conf"
 cat > "${ROOTFS_DIR}/etc/ssh/sshd_config.d/99-opensonix.conf" << 'SSHEOF'
 PasswordAuthentication no
 ChallengeResponseAuthentication no

@@ -8,6 +8,7 @@ opus_bitrate     128000
 opus_stereo      yes
 opus_inbandFEC   yes
 
+module_path      /usr/lib/baresip/modules
 module           ctrl_tcp.so
 module           opus.so
 module           alsa.so

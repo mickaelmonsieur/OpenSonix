@@ -14,7 +14,7 @@ import './watchdog.js'               // side-effect: auto-reconnect for SENDER m
 
 import authRoutes    from './routes/auth.js'
 import callRoutes    from './routes/call.js'
-import configRoutes  from './routes/config.js'
+import configRoutes, { applyBaresipConfig } from './routes/config.js'
 import networkRoutes from './routes/network.js'
 import systemRoutes  from './routes/system.js'
 
@@ -43,6 +43,10 @@ await fastify.register(callRoutes,    { prefix: '/api/call' })
 await fastify.register(configRoutes,  { prefix: '/api' })
 await fastify.register(networkRoutes, { prefix: '/api/network' })
 await fastify.register(systemRoutes,  { prefix: '/api/system' })
+
+// Ensure baresip has generated config/accounts immediately after first boot,
+// before any UI-triggered config change happens.
+await applyBaresipConfig()
 
 // ── WebSocket /ws — server-push events to the browser ────────────────────────
 

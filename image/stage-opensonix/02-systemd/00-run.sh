@@ -2,10 +2,22 @@
 
 on_chroot << 'EOF'
 getent group baresip   || groupadd --system baresip
-getent group opensonix || groupadd --system opensonix
+getent group opensonix || groupadd opensonix
+for group in gpio i2c spi; do
+    getent group "${group}" || groupadd --system "${group}"
+done
 
 id -u baresip   &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin --ingroup baresip   baresip
-id -u opensonix &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin --ingroup opensonix opensonix
+
+# The image advertises a physical console login for opensonix/opensonix.
+# In CI pi-gen creates this user from FIRST_USER_* before this stage runs,
+# but keep the custom stage self-contained for manual builds as well.
+if ! id -u opensonix &>/dev/null; then
+    useradd --create-home --shell /bin/bash --gid opensonix opensonix
+fi
+usermod --shell /bin/bash --home /home/opensonix opensonix
+install -d -m 755 -o opensonix -g opensonix /home/opensonix
+echo 'opensonix:opensonix' | chpasswd
 
 usermod -aG audio baresip
 usermod -aG audio opensonix
@@ -20,6 +32,8 @@ systemctl enable opensonix-ui
 systemctl enable chrony
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
+systemctl enable getty@tty1.service
+systemctl set-default multi-user.target
 
 # ── Mask unnecessary services ─────────────────────────────────────────────────
 # ln -sf is used instead of systemctl mask so it works reliably in a chroot
@@ -32,6 +46,7 @@ for unit in \
     wpa_supplicant.service \
     ModemManager.service \
     triggerhappy.service \
+    triggerhappy.socket \
     dphys-swapfile.service \
     rsyslog.service \
     apt-daily.service \
@@ -42,4 +57,9 @@ for unit in \
     e2scrub_all.timer; do
     ln -sf /dev/null "/etc/systemd/system/${unit}"
 done
+
+# triggerhappy also installs a udev rule that calls th-cmd for every input
+# device. With the daemon disabled that only creates boot warnings.
+mkdir -p /etc/udev/rules.d
+ln -sf /dev/null /etc/udev/rules.d/60-triggerhappy.rules
 EOF
