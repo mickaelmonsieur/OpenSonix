@@ -3,7 +3,11 @@
     "allow": [
       "Bash(git commit -m ' *)",
       "Bash(npm uninstall *)",
-      "Bash(git -C /Users/mickael/Documents/opensonix tag --sort=-version:refname)"
+      "Bash(git -C /Users/mickael/Documents/opensonix tag --sort=-version:refname)",
+      "Bash(git -C /Users/mickael/Documents/opensonix status)",
+      "Bash(git -C /Users/mickael/Documents/opensonix diff)",
+      "Bash(git -C /Users/mickael/Documents/opensonix commit -m ' *)",
+      "Bash(git -C /Users/mickael/Documents/opensonix add ui/client/src/i18n/ ui/client/src/main.jsx ui/client/src/App.jsx ui/client/src/pages/Dashboard.jsx ui/client/src/pages/Config.jsx ui/client/src/pages/Network.jsx ui/client/src/pages/System.jsx ui/client/src/pages/ChangePassword.jsx)"
     ]
   }
 }

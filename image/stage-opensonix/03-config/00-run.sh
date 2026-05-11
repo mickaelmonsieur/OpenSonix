@@ -51,6 +51,24 @@ driftfile /var/lib/chrony/chrony.drift
 rtcsync
 CHRONYEOF
 
+# ── Console keyboard ──────────────────────────────────────────────────────────
+# OpenSonix intentionally skips pi-gen stage2, where Raspberry Pi OS normally
+# installs and configures console-setup/keyboard-configuration.
+KEYMAP="${KEYBOARD_KEYMAP:-fr}"
+cat > "${ROOTFS_DIR}/etc/default/keyboard" << KEYBOARDEOF
+XKBMODEL="pc105"
+XKBLAYOUT="${KEYMAP}"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+BACKSPACE="guess"
+KEYBOARDEOF
+
+on_chroot << 'EOF'
+DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration console-setup
+setupcon --force --save-only -v
+EOF
+
 # ── SSH hardening ─────────────────────────────────────────────────────────────
 # Disable password auth — keys only.
 mkdir -p "${ROOTFS_DIR}/etc/ssh/sshd_config.d"
