@@ -307,9 +307,9 @@ export default async function systemRoutes(fastify) {
   }, async (req, reply) => {
     const { timezone } = req.body
     try {
-      await execFile('timedatectl', ['set-timezone', timezone])
-    } catch {
-      return reply.code(400).send({ error: `Fuseau horaire invalide : ${timezone}` })
+      await execFile('sudo', ['timedatectl', 'set-timezone', timezone])
+    } catch (err) {
+      return reply.code(400).send({ error: `Impossible de changer le fuseau horaire : ${err.message}` })
     }
     db.prepare('INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)').run('timezone', timezone)
     return { ok: true }
