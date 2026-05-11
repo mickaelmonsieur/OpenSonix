@@ -32,6 +32,8 @@ systemctl enable opensonix-ui
 systemctl enable chrony
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
+systemctl enable ssh
+systemctl enable avahi-daemon
 systemctl enable getty@tty1.service
 systemctl set-default multi-user.target
 

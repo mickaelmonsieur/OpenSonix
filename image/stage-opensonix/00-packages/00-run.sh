@@ -27,6 +27,8 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     keyboard-configuration \
     nodejs \
     npm \
+    openssh-server \
+    avahi-daemon \
     build-essential \
     python3 \
     chrony \
