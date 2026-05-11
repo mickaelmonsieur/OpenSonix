@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth }                          from '../App.jsx'
 import { useI18n }                          from '../i18n/index.jsx'
+import { copyText }                         from '../clipboard.js'
 
 const VOLUMES = Array.from({ length: 21 }, (_, i) => i * 5)
 
@@ -39,11 +40,11 @@ function Banner({ ok, message, onDismiss }) {
 
 function CredField({ label, value, copyLabel, copiedLabel }) {
   const [copied, setCopied] = useState(false)
-  const copy = () => {
-    navigator.clipboard?.writeText(value).then(() => {
+  const copy = async () => {
+    if (await copyText(value)) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
-    })
+    }
   }
   return (
     <div className="form-row">

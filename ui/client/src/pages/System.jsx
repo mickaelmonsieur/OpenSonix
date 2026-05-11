@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate }                       from 'react-router-dom'
 import { useAuth }                           from '../App.jsx'
 import { useI18n, LANGUAGES }               from '../i18n/index.jsx'
+import { copyText }                         from '../clipboard.js'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -269,11 +270,11 @@ function DiagReport({ apiFetch }) {
     }
   }
 
-  const copy = () => {
-    navigator.clipboard?.writeText(report).then(() => {
+  const copy = async () => {
+    if (await copyText(report)) {
       setCopied(true)
       setTimeout(() => setCopied(false), 1500)
-    })
+    }
   }
 
   return (
