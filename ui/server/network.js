@@ -1,5 +1,7 @@
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { execFile as _execFile } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { promisify } from 'node:util'
 
 const execFile = promisify(_execFile)
@@ -47,19 +49,31 @@ export async function writeNetworkConfig({ mode, ip, mask, gateway, dns1, dns2, 
     content = '[Match]\nName=eth0\n\n[Network]\nDHCP=yes\n'
   }
 
-  await writeFile(NETWORK_FILE, content, 'utf8')
+  await writeRootFile(NETWORK_FILE, content)
 
   if (hostname) {
-    await writeFile(HOSTNAME_FILE, hostname + '\n', 'utf8')
-    execFile('hostnamectl', ['set-hostname', hostname]).catch(() => {})
+    await writeRootFile(HOSTNAME_FILE, hostname + '\n')
+    execFile('sudo', ['hostnamectl', 'set-hostname', hostname]).catch(() => {})
   }
 
   // Fire-and-forget — IP may change, caller warns the user
-  execFile('systemctl', ['restart', 'systemd-networkd'])
+  execFile('sudo', ['systemctl', 'restart', 'systemd-networkd'])
     .catch(err => console.error('[network] systemd-networkd restart failed:', err.message))
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+
+async function writeRootFile(path, content) {
+  const tmp = join(tmpdir(), `opensonix-${process.pid}-${Date.now()}`)
+  await mkdir(tmp, { recursive: true, mode: 0o700 })
+  const src = join(tmp, 'file')
+  try {
+    await writeFile(src, content, 'utf8')
+    await execFile('sudo', ['install', '-m', '644', '-o', 'root', '-g', 'root', src, path])
+  } finally {
+    await rm(tmp, { recursive: true, force: true })
+  }
+}
 
 function prefixToMask(prefix) {
   const n = (0xffffffff << (32 - prefix)) >>> 0

@@ -36,7 +36,7 @@ export default async function networkRoutes(fastify) {
       await writeNetworkConfig(next)
     } catch (err) {
       const msg = err.code === 'EACCES'
-        ? 'Permission refusée : le serveur doit être exécuté en root pour modifier /etc/dhcpcd.conf'
+        ? 'Permission refusée : impossible de modifier la configuration systemd-networkd'
         : `Erreur d'écriture : ${err.message}`
       return reply.code(500).send({ error: msg })
     }

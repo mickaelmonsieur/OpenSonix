@@ -421,7 +421,7 @@ export default async function systemRoutes(fastify) {
         hostname: 'opensonix',
       })
     } catch (err) {
-      console.error('[system] dhcpcd reset skipped:', err.message)
+      console.error('[system] network reset skipped:', err.message)
     }
 
     // 5. Reboot (fire-and-forget — response is sent before the machine goes down)
