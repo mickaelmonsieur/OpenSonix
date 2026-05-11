@@ -1,5 +1,6 @@
 import { execFile as _execFile }              from 'node:child_process'
-import { readFile, writeFile }               from 'node:fs/promises'
+import { mkdir, readFile, rm, writeFile }    from 'node:fs/promises'
+import { join }                              from 'node:path'
 import { promisify }                         from 'node:util'
 import { randomBytes }                       from 'node:crypto'
 import { brotliCompressSync, brotliDecompressSync } from 'node:zlib'
@@ -243,7 +244,26 @@ async function writeChronyCfg(server1, server2) {
     'driftfile /var/lib/chrony/chrony.drift',
     'rtcsync',
   ].join('\n') + '\n'
-  await writeFile(CHRONY_CONF, content)
+  await writeRootFile(CHRONY_CONF, content)
+}
+
+async function writeRootFile(path, content) {
+  const tmp = join(os.tmpdir(), `opensonix-${process.pid}-${Date.now()}`)
+  await mkdir(tmp, { recursive: true, mode: 0o700 })
+  const src = join(tmp, 'file')
+  try {
+    await writeFile(src, content, 'utf8')
+    await execFile('sudo', ['install', '-m', '644', '-o', 'root', '-g', 'root', src, path])
+  } finally {
+    await rm(tmp, { recursive: true, force: true })
+  }
+}
+
+function rebootSoon() {
+  setTimeout(() => {
+    execFile('sudo', ['systemctl', 'reboot'])
+      .catch(err => console.error('[system] reboot failed:', err.message))
+  }, 250)
 }
 
 // ── Routes ────────────────────────────────────────────────────────────────────
@@ -312,7 +332,7 @@ export default async function systemRoutes(fastify) {
     const { server1, server2 } = req.body
     try {
       await writeChronyCfg(server1, server2)
-      await execFile('systemctl', ['restart', 'chrony'])
+      await execFile('sudo', ['systemctl', 'restart', 'chrony'])
     } catch (err) {
       return reply.code(500).send({ error: `Erreur NTP : ${err.message}` })
     }
@@ -391,7 +411,7 @@ export default async function systemRoutes(fastify) {
 
   // POST /api/system/reboot
   fastify.post('/reboot', async () => {
-    execFile('systemctl', ['reboot']).catch(() => {})
+    rebootSoon()
     return { ok: true }
   })
 
@@ -425,7 +445,7 @@ export default async function systemRoutes(fastify) {
     }
 
     // 5. Reboot (fire-and-forget — response is sent before the machine goes down)
-    execFile('systemctl', ['reboot']).catch(() => {})
+    rebootSoon()
     return { ok: true }
   })
 }
