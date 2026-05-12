@@ -32,5 +32,6 @@ DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     build-essential \
     python3 \
     chrony \
-    systemd-resolved
+    systemd-resolved \
+    sngrep
 EOF
