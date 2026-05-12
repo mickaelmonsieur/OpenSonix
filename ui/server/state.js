@@ -13,6 +13,13 @@ let callDirection = 'outbound'   // overridden to 'inbound' on CALL_INCOMING
 baresip.on('CALL_INCOMING', msg => {
   callDirection = 'inbound'
   state.call    = { status: 'incoming', uri: msg.peeruri ?? '', direction: 'inbound' }
+
+  const mode = db.prepare('SELECT value FROM config WHERE key = ?').get('mode')?.value
+  if (mode === 'RECEIVER') {
+    baresip.send('accept').catch(err => {
+      console.error('[call] auto-accept failed:', err.message)
+    })
+  }
 })
 
 baresip.on('CALL_RINGING', () => {

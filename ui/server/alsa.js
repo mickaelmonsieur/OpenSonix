@@ -13,8 +13,11 @@ function parseDeviceList(stdout) {
 }
 
 function cardFromDevice(device) {
-  const m = device.match(/hw:(\d+)/)
-  return m ? m[1] : '1'
+  const byNumber = device?.match(/hw:(\d+)/)
+  if (byNumber) return byNumber[1]
+
+  const byName = device?.match(/CARD=([^,]+)/)
+  return byName ? byName[1] : null
 }
 
 export async function listPlaybackDevices() {
@@ -37,11 +40,13 @@ export async function listCaptureDevices() {
 
 export async function setCaptureVolume(device, percent) {
   const card = cardFromDevice(device)
+  if (!card) return
   await execFile('amixer', ['-c', card, 'sset', 'Capture', `${percent}%`])
 }
 
 export async function setPlaybackVolume(device, percent) {
   const card = cardFromDevice(device)
+  if (!card) return
   await execFile('amixer', ['-c', card, 'sset', 'Master', `${percent}%`])
 }
 
@@ -65,11 +70,11 @@ async function readLevelFromAmixer(card, controls) {
 // On hardware that exposes dynamic peak meters the values reflect actual signal.
 // On other hardware they reflect the current volume setting.
 export async function getAudioLevels(deviceIn, deviceOut) {
-  const cardIn  = cardFromDevice(deviceIn  ?? 'hw:1')
-  const cardOut = cardFromDevice(deviceOut ?? 'hw:1')
+  const cardIn  = cardFromDevice(deviceIn)
+  const cardOut = cardFromDevice(deviceOut)
   const [tx, rx] = await Promise.all([
-    readLevelFromAmixer(cardIn,  CAPTURE_CONTROLS),
-    readLevelFromAmixer(cardOut, PLAYBACK_CONTROLS),
+    cardIn  ? readLevelFromAmixer(cardIn,  CAPTURE_CONTROLS)  : 0,
+    cardOut ? readLevelFromAmixer(cardOut, PLAYBACK_CONTROLS) : 0,
   ])
   return { tx, rx }
 }

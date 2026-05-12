@@ -96,8 +96,8 @@ function seed() {
   const insertConfig = db.prepare('INSERT OR IGNORE INTO config (key, value) VALUES (?, ?)')
   db.transaction(() => {
     insertConfig.run('mode',            'RECEIVER')
-    insertConfig.run('audio_device_in', 'hw:1,0')
-    insertConfig.run('audio_device_out','hw:1,0')
+    insertConfig.run('audio_device_in', '')
+    insertConfig.run('audio_device_out','')
     insertConfig.run('capture_volume',  '80')
     insertConfig.run('playback_volume', '80')
     insertConfig.run('opus_bitrate',    '128000')

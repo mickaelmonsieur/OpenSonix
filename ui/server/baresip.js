@@ -49,7 +49,7 @@ export class BaresipClient extends EventEmitter {
         ? { command, params, token }
         : { command, token }
 
-      this.#socket.write(JSON.stringify(payload) + '\n')
+      this.#socket.write(encodeNetstring(payload))
     })
   }
 
@@ -78,12 +78,7 @@ export class BaresipClient extends EventEmitter {
 
     socket.on('data', (chunk) => {
       this.#buffer += chunk
-      const lines  = this.#buffer.split('\n')
-      this.#buffer = lines.pop()            // keep any incomplete trailing fragment
-      for (const line of lines) {
-        const trimmed = line.trim()
-        if (trimmed) this.#handleMessage(trimmed)
-      }
+      this.#drainNetstrings()
     })
 
     socket.on('error', (err) => {
@@ -125,6 +120,36 @@ export class BaresipClient extends EventEmitter {
     }
   }
 
+  #drainNetstrings() {
+    while (this.#buffer) {
+      const colon = this.#buffer.indexOf(':')
+      if (colon === -1) return
+
+      const lengthText = this.#buffer.slice(0, colon)
+      if (!/^\d+$/.test(lengthText)) {
+        console.error('[baresip] invalid ctrl_tcp frame:', this.#buffer.slice(0, 32))
+        this.#buffer = ''
+        return
+      }
+
+      const length = Number(lengthText)
+      const start  = colon + 1
+      const end    = start + length
+      if (this.#buffer.length < end + 1) return
+
+      const payload = this.#buffer.slice(start, end)
+      const trailer = this.#buffer[end]
+      this.#buffer  = this.#buffer.slice(end + 1)
+
+      if (trailer !== ',') {
+        console.error('[baresip] invalid ctrl_tcp netstring trailer')
+        continue
+      }
+
+      this.#handleMessage(payload)
+    }
+  }
+
   #rejectAllPending(reason) {
     for (const { reject, timer } of this.#pending.values()) {
       clearTimeout(timer)
@@ -142,3 +167,8 @@ export class BaresipClient extends EventEmitter {
 
 // Singleton — one connection per process.
 export default new BaresipClient()
+
+function encodeNetstring(payload) {
+  const json = JSON.stringify(payload)
+  return `${Buffer.byteLength(json)}:${json},`
+}

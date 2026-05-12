@@ -51,6 +51,22 @@ driftfile /var/lib/chrony/chrony.drift
 rtcsync
 CHRONYEOF
 
+# ── Audio HATs ────────────────────────────────────────────────────────────────
+# OpenSonix targets Raspberry Pi audio codecs. Enable the common HiFiBerry
+# DAC+ ADC overlay by default so cards without HAT EEPROM are available to ALSA.
+BOOT_CONFIG="${ROOTFS_DIR}/boot/firmware/config.txt"
+[ -f "${BOOT_CONFIG}" ] || BOOT_CONFIG="${ROOTFS_DIR}/boot/config.txt"
+if [ -f "${BOOT_CONFIG}" ]; then
+    sed -i 's/^dtparam=audio=on/#dtparam=audio=on/' "${BOOT_CONFIG}"
+    cat >> "${BOOT_CONFIG}" << 'AUDIOHATEOF'
+
+# OpenSonix audio HAT support
+dtparam=i2s=on
+dtparam=audio=off
+dtoverlay=hifiberry-dacplusadc
+AUDIOHATEOF
+fi
+
 # ── Console keyboard ──────────────────────────────────────────────────────────
 # OpenSonix intentionally skips pi-gen stage2, where Raspberry Pi OS normally
 # installs and configures console-setup/keyboard-configuration.

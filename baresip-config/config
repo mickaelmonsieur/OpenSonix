@@ -10,6 +10,7 @@ opus_inbandFEC   yes
 
 module_path      /usr/lib/baresip/modules
 module           ctrl_tcp.so
+module           menu.so
 module           opus.so
 module           alsa.so
 module           account.so

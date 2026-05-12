@@ -59,6 +59,7 @@ function renderBaresipConf(cfg) {
     ``,
     `module_path      /usr/lib/baresip/modules`,
     `module           ctrl_tcp.so`,
+    `module           menu.so`,
     `module           opus.so`,
     `module           alsa.so`,
     `module           account.so`,
@@ -69,11 +70,9 @@ function renderBaresipConf(cfg) {
 }
 
 function renderBaresipAccounts(cfg, sip) {
-  // Both modes: local identity uses generated username.
-  // SENDER registers with remote host; RECEIVER just listens.
-  if (cfg.mode === 'SENDER' && sip.registrar) {
-    return `<sip:${sip.username}@${sip.registrar}:${cfg.sip_port}>;auth_pass=${sip.password ?? ''};regint=60;\n`
-  }
+  // Both modes use a local identity only. OpenSonix devices call each other
+  // directly; a receiver is not a SIP registrar, so the sender must not
+  // REGISTER against the remote host.
   return `<sip:${sip.username}@0.0.0.0:${cfg.sip_port}>;regint=0;\n`
 }
 
@@ -81,6 +80,7 @@ export async function applyBaresipConfig() {
   const cfg = cfgMap()
   const sip = getSip()
   try {
+    await resolveAudioDevices(cfg)
     await Promise.all([
       writeFile(BARESIP_CONF,     renderBaresipConf(cfg)),
       writeFile(BARESIP_ACCOUNTS, renderBaresipAccounts(cfg, sip)),
@@ -89,6 +89,47 @@ export async function applyBaresipConfig() {
   } catch (err) {
     console.error('[config] baresip restart skipped:', err.message)
   }
+}
+
+async function resolveAudioDevices(cfg) {
+  const [playback, capture] = await Promise.all([listPlaybackDevices(), listCaptureDevices()])
+  const audioOut = pickAudioDevice(cfg.audio_device_out, playback, 'playback')
+  const audioIn  = pickAudioDevice(cfg.audio_device_in,  capture,  'capture')
+
+  if (audioOut && audioOut !== cfg.audio_device_out) {
+    cfg.audio_device_out = audioOut
+    db.prepare('UPDATE config SET value = ? WHERE key = ?').run(audioOut, 'audio_device_out')
+  }
+  if (audioIn && audioIn !== cfg.audio_device_in) {
+    cfg.audio_device_in = audioIn
+    db.prepare('UPDATE config SET value = ? WHERE key = ?').run(audioIn, 'audio_device_in')
+  }
+}
+
+function pickAudioDevice(current, devices, kind) {
+  if (current && current !== 'null' && devices.includes(current)) return current
+
+  const hifiberry = pickMatchingDevice(devices, /hifiberry|sndrpihifiberry|dacplus|dac|adc/i)
+  if (hifiberry) return hifiberry
+
+  const preferred = kind === 'capture'
+    ? ['default:CARD=CODEC', 'plughw:CARD=CODEC,DEV=0', 'hw:CARD=CODEC,DEV=0', 'null']
+    : [
+        'default:CARD=CODEC', 'plughw:CARD=CODEC,DEV=0', 'hw:CARD=CODEC,DEV=0',
+        'default:CARD=Headphones', 'plughw:CARD=Headphones,DEV=0',
+        'default:CARD=vc4hdmi', 'plughw:CARD=vc4hdmi,DEV=0', 'null',
+      ]
+
+  return preferred.find(device => devices.includes(device))
+    ?? devices.find(device => device !== 'null')
+    ?? devices[0]
+    ?? current
+}
+
+function pickMatchingDevice(devices, pattern) {
+  return devices.find(device => device !== 'null' && device.startsWith('default:') && pattern.test(device))
+    ?? devices.find(device => device !== 'null' && device.startsWith('plughw:') && pattern.test(device))
+    ?? devices.find(device => device !== 'null' && pattern.test(device))
 }
 
 // ── routes ───────────────────────────────────────────────────────────────────

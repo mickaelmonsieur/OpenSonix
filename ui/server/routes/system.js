@@ -19,8 +19,8 @@ const genToken = () => randomBytes(16).toString('hex')
 
 const DEFAULT_CONFIG = [
   ['mode',            'RECEIVER'],
-  ['audio_device_in', 'hw:1,0'],
-  ['audio_device_out','hw:1,0'],
+  ['audio_device_in', ''],
+  ['audio_device_out',''],
   ['capture_volume',  '80'],
   ['playback_volume', '80'],
   ['opus_bitrate',    '128000'],
