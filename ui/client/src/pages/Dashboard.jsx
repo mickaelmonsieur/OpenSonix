@@ -21,13 +21,6 @@ function CallBadge({ call }) {
   return <span className="badge grey">—</span>
 }
 
-function RegBadge({ reg }) {
-  const { t } = useI18n()
-  if (reg === 'ok')   return <span className="badge green">{t('dashboard.badge_registered')}</span>
-  if (reg === 'fail') return <span className="badge red">{t('dashboard.badge_reg_fail')}</span>
-  return <span className="badge grey">—</span>
-}
-
 function DaemonBadge({ connected }) {
   const { t } = useI18n()
   return connected
@@ -105,7 +98,6 @@ export default function Dashboard() {
   const mode             = rest.mode
   const call             = ws.call             !== null ? ws.call             : rest.call
   const baresipConnected = ws.baresipConnected !== null ? ws.baresipConnected : rest.baresipConnected
-  const registration     = ws.registration     !== null ? ws.registration     : rest.registration
   const audioLevel       = ws.audioLevel
 
   const dialUri     = rest.dialUri
@@ -160,12 +152,6 @@ export default function Dashboard() {
                 <td>{t('dashboard.row_codec')}</td>
                 <td><DaemonBadge connected={baresipConnected} /></td>
               </tr>
-              {isSender && (
-                <tr>
-                  <td>{t('dashboard.row_registration')}</td>
-                  <td><RegBadge reg={registration} /></td>
-                </tr>
-              )}
             </tbody>
           </table>
         </div>

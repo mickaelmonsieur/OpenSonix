@@ -2,7 +2,7 @@ import baresip   from './baresip.js'
 import db         from './db.js'
 import { state }  from './state.js'
 
-// Auto-reconnect watchdog for SENDER mode.
+// Auto-reconnect watchdog for direct SENDER mode.
 // When the link drops unexpectedly, redials with exponential backoff.
 // Dormant in RECEIVER mode (buildDialUri returns null).
 
@@ -54,12 +54,20 @@ function scheduleRedial() {
   retryDelay = Math.min(retryDelay * 2, REDIAL_MAX)
 }
 
-// Registration success → auto-dial (covers boot and baresip restart)
-baresip.on('REGISTER_OK', () => {
+function tryAutoDial() {
   if (manualHangup || state.call) return
   const uri = buildDialUri()
   if (uri) dial(uri)
-})
+}
+
+// ctrl_tcp connection ready → auto-dial (covers boot and baresip restart).
+// Direct OpenSonix links use regint=0, so REGISTER_OK is only relevant for a
+// future SIP relay mode.
+baresip.on('connected', () => setTimeout(tryAutoDial, 1_000))
+
+// The baresip singleton may connect before this module registers listeners.
+// Run one deferred pass so SENDER boot still dials in that race.
+setTimeout(tryAutoDial, 3_000)
 
 // Call up → reset backoff for next drop
 baresip.on('CALL_ESTABLISHED', () => {
@@ -70,7 +78,7 @@ baresip.on('CALL_ESTABLISHED', () => {
 // Call dropped → redial unless user hung up manually
 baresip.on('CALL_CLOSED', () => {
   dialing = false
-  if (manualHangup) { manualHangup = false; return }
+  if (manualHangup) return
   scheduleRedial()
 })
 
