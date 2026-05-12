@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useAuth }             from '../App.jsx'
 import { useI18n }             from '../i18n/index.jsx'
 import { useWebSocket }        from '../hooks/useWebSocket.js'
@@ -65,7 +65,22 @@ function VuMeter({ tx, rx }) {
   )
 }
 
+function formatCallDate(value) {
+  if (!value) return '—'
+  return new Date(value).toLocaleString()
+}
+
+function formatDuration(seconds) {
+  const safe = Math.max(0, Math.floor(seconds || 0))
+  const h = Math.floor(safe / 3600)
+  const m = Math.floor((safe % 3600) / 60)
+  const s = safe % 60
+  return [h, m, s].map(n => String(n).padStart(2, '0')).join(':')
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────────
+
+const STATUS_POLL_MS = 2000
 
 export default function Dashboard() {
   const { token, apiFetch } = useAuth()
@@ -81,22 +96,36 @@ export default function Dashboard() {
   })
   const [busy, setBusy]         = useState(false)
   const [cmdError, setCmdError] = useState('')
+  const [now, setNow]           = useState(Date.now())
+
+  const refreshStatus = useCallback(async () => {
+    const r = await apiFetch('/api/status')
+    const data = await r.json()
+    setRest({
+      mode:             data.mode             ?? 'RECEIVER',
+      call:             data.call             ?? null,
+      baresipConnected: data.baresipConnected ?? false,
+      registration:     data.registration     ?? null,
+      dialUri:          data.dialUri          ?? null,
+    })
+    return data
+  }, [apiFetch])
 
   useEffect(() => {
-    apiFetch('/api/status')
-      .then(r => r.json())
-      .then(data => setRest({
-        mode:             data.mode             ?? 'RECEIVER',
-        call:             data.call             ?? null,
-        baresipConnected: data.baresipConnected ?? false,
-        registration:     data.registration     ?? null,
-        dialUri:          data.dialUri          ?? null,
-      }))
-      .catch(() => {})
-  }, [])  // apiFetch is stable
+    refreshStatus().catch(() => {})
+    const timer = setInterval(() => {
+      refreshStatus().catch(() => {})
+    }, STATUS_POLL_MS)
+    return () => clearInterval(timer)
+  }, [refreshStatus])
+
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const mode             = rest.mode
-  const call             = ws.call             !== null ? ws.call             : rest.call
+  const call             = ws.call !== undefined ? ws.call : rest.call
   const baresipConnected = ws.baresipConnected !== null ? ws.baresipConnected : rest.baresipConnected
   const audioLevel       = ws.audioLevel
 
@@ -104,6 +133,9 @@ export default function Dashboard() {
   const isConnected = call?.status === 'established'
   const isIncoming  = call?.status === 'incoming'
   const isSender    = mode === 'SENDER'
+  const callDuration = isConnected && call.startedAt
+    ? (now - new Date(call.startedAt).getTime()) / 1000
+    : 0
 
   const cmd = async (endpoint, body = {}) => {
     setBusy(true)
@@ -116,7 +148,9 @@ export default function Dashboard() {
       if (!res.ok) {
         const j = await res.json().catch(() => ({}))
         setCmdError(j.error ?? `Error ${res.status}`)
+        return
       }
+      await refreshStatus()
     } catch (e) {
       setCmdError(e.message)
     } finally {
@@ -147,6 +181,18 @@ export default function Dashboard() {
                   <td>{t('dashboard.row_remote_uri')}</td>
                   <td><code>{call.uri || '—'}</code></td>
                 </tr>
+              )}
+              {isConnected && call.startedAt && (
+                <>
+                  <tr>
+                    <td>{t('dashboard.row_established_at')}</td>
+                    <td>{formatCallDate(call.startedAt)}</td>
+                  </tr>
+                  <tr>
+                    <td>{t('dashboard.row_duration')}</td>
+                    <td><code>{formatDuration(callDuration)}</code></td>
+                  </tr>
+                </>
               )}
               <tr>
                 <td>{t('dashboard.row_codec')}</td>
@@ -189,7 +235,7 @@ export default function Dashboard() {
                 {t('dashboard.answer')}
               </button>
             )}
-            {(isConnected || isIncoming) && (
+            {isSender && (isConnected || isIncoming) && (
               <button
                 className="btn btn-danger"
                 disabled={busy || !baresipConnected}

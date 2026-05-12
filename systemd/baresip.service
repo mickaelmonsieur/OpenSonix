@@ -11,6 +11,8 @@ ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
 RestartSec=3
 TimeoutStartSec=30
+RuntimeDirectory=opensonix-meter
+RuntimeDirectoryMode=0755
 
 NoNewPrivileges=yes
 PrivateTmp=yes

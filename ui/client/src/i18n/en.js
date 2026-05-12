@@ -37,6 +37,8 @@ export default {
     row_mode:         'Mode',
     row_link:         'Link',
     row_remote_uri:   'Remote URI',
+    row_established_at: 'Established at',
+    row_duration:     'Duration',
     row_codec:        'Codec engine',
     row_registration: 'Registration',
     badge_sender:     'SENDER',

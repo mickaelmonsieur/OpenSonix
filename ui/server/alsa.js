@@ -1,7 +1,11 @@
 import { execFile as _execFile } from 'node:child_process'
+import { readFile } from 'node:fs/promises'
 import { promisify } from 'node:util'
+import { join } from 'node:path'
 
 const execFile = promisify(_execFile)
+const METER_DIR = process.env.OPENSONIX_METER_DIR ?? '/run/opensonix-meter'
+const METER_STALE_MS = 1500
 
 // Parse `aplay -L` / `arecord -L` output.
 // Non-indented lines are device identifiers; indented lines are descriptions.
@@ -9,6 +13,7 @@ function parseDeviceList(stdout) {
   return stdout.split('\n')
     .filter(line => line.length > 0 && !/^\s/.test(line))
     .map(line => line.trim())
+    .filter(device => !device.startsWith('opensonix_meter_'))
     .filter(Boolean)
 }
 
@@ -50,31 +55,19 @@ export async function setPlaybackVolume(device, percent) {
   await execFile('amixer', ['-c', card, 'sset', 'Master', `${percent}%`])
 }
 
-// Ordered lists of controls to try — first match wins.
-// Some cards expose live peak meters; others only expose volume settings.
-const CAPTURE_CONTROLS  = ['Capture', 'Mic', 'Mic Boost', 'Input']
-const PLAYBACK_CONTROLS = ['Master', 'PCM', 'Speaker', 'Headphone']
-
-async function readLevelFromAmixer(card, controls) {
-  for (const ctrl of controls) {
-    try {
-      const { stdout } = await execFile('amixer', ['-c', card, '-M', 'sget', ctrl])
-      const m = stdout.match(/\[(\d+)%\]/)
-      if (m) return parseInt(m[1], 10) / 100
-    } catch {}
+async function readMeter(direction) {
+  try {
+    const payload = JSON.parse(await readFile(join(METER_DIR, `${direction}.json`), 'utf8'))
+    if (!payload.updatedAt || Date.now() - payload.updatedAt > METER_STALE_MS) return 0
+    return Math.max(payload.left ?? 0, payload.right ?? 0)
+  } catch {
+    return 0
   }
-  return 0
 }
 
-// Returns { tx, rx } in [0, 1].
-// On hardware that exposes dynamic peak meters the values reflect actual signal.
-// On other hardware they reflect the current volume setting.
+// Returns { tx, rx } in [0, 1]. Values come from the ALSA file-plugin taps
+// configured around the actual baresip source/player PCMs.
 export async function getAudioLevels(deviceIn, deviceOut) {
-  const cardIn  = cardFromDevice(deviceIn)
-  const cardOut = cardFromDevice(deviceOut)
-  const [tx, rx] = await Promise.all([
-    cardIn  ? readLevelFromAmixer(cardIn,  CAPTURE_CONTROLS)  : 0,
-    cardOut ? readLevelFromAmixer(cardOut, PLAYBACK_CONTROLS) : 0,
-  ])
+  const [tx, rx] = await Promise.all([readMeter('tx'), readMeter('rx')])
   return { tx, rx }
 }

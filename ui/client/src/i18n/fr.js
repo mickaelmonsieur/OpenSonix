@@ -37,6 +37,8 @@ export default {
     row_mode:         'Mode',
     row_link:         'Liaison',
     row_remote_uri:   'URI distant',
+    row_established_at: 'Établi le',
+    row_duration:     'Durée',
     row_codec:        'Moteur codec',
     row_registration: 'Enregistrement',
     badge_sender:     'ÉMETTEUR',

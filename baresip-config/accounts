@@ -3,5 +3,5 @@
 # SENDER mode with SIP server:
 # <sip:opensonix@REGISTRAR_IP:7060>;auth_pass=PASSWORD;regint=60;
 #
-# RECEIVER mode (no registration, just listen):
-# <sip:opensonix@0.0.0.0:7060>;regint=0;
+# RECEIVER mode (no registration, just listen and auto-answer):
+# <sip:opensonix@0.0.0.0:7060>;regint=0;answermode=auto;

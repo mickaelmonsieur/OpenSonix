@@ -4,11 +4,12 @@ const RECONNECT_DELAY = 3000
 
 // Maintains a WebSocket connection to /ws?token=<jwt>.
 // Returns { wsConnected, call, registration, baresipConnected, audioLevel }.
-// Values start as null/false/default and are updated as WS events arrive.
+// `call` starts as undefined, then becomes either a call object or null once
+// the websocket has seen an authoritative call event.
 // The consumer is responsible for seeding initial values from the REST API.
 export function useWebSocket(token) {
   const [wsConnected,      setWsConnected]      = useState(false)
-  const [call,             setCall]             = useState(null)
+  const [call,             setCall]             = useState(undefined)
   const [registration,     setRegistration]     = useState(null)
   const [baresipConnected, setBaresipConnected] = useState(null)
   const [audioLevel,       setAudioLevel]       = useState({ tx: 0, rx: 0 })
@@ -42,7 +43,7 @@ export function useWebSocket(token) {
             setCall(prev => prev ? { ...prev, status: 'ringing' } : prev)
             break
           case 'call:established':
-            setCall({ status: 'established', uri: d.uri })
+            setCall({ status: 'established', uri: d.uri, startedAt: d.startedAt })
             break
           case 'call:closed':
             setCall(null)

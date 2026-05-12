@@ -9,7 +9,7 @@ import baresip                    from './baresip.js'
 import { verifyAccess }           from './auth.js'
 import db                         from './db.js'
 import { getAudioLevels }         from './alsa.js'
-import './state.js'                    // side-effect: registers baresip event handlers
+import { state }                  from './state.js'   // side-effect: registers baresip event handlers
 import './watchdog.js'               // side-effect: auto-reconnect for SENDER mode
 
 import authRoutes    from './routes/auth.js'
@@ -89,11 +89,18 @@ function stopLevelPolling() {
 
 // Map baresip events to browser WebSocket messages
 baresip.on('connected',        ()  => broadcast('baresip:connected', {}))
-baresip.on('disconnected',     ()  => broadcast('baresip:lost',      {}))
+baresip.on('disconnected',     ()  => {
+  stopLevelPolling()
+  broadcast('baresip:lost', {})
+  broadcast('call:closed', { reason: 'baresip disconnected' })
+})
 baresip.on('CALL_INCOMING',    msg => broadcast('call:incoming',    { uri: msg.peeruri ?? '' }))
 baresip.on('CALL_RINGING',     ()  => broadcast('call:ringing',     {}))
 baresip.on('CALL_ESTABLISHED', msg => {
-  broadcast('call:established', { uri: msg.peeruri ?? '' })
+  broadcast('call:established', {
+    uri:       msg.peeruri ?? '',
+    startedAt: state.call?.startedAt ?? new Date().toISOString(),
+  })
   startLevelPolling()
 })
 baresip.on('CALL_CLOSED',      msg => {

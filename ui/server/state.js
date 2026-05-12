@@ -3,36 +3,14 @@ import db      from './db.js'
 
 // Live state updated by baresip events — imported by routes that need it.
 export const state = {
-  call:         null,   // null | { status: 'incoming'|'ringing'|'established', uri, direction }
+  call:         null,   // null | { status: 'incoming'|'ringing'|'established', uri, direction, startedAt? }
   registration: null,   // null | 'ok' | 'fail'
 }
 
 let callStartedAt = null
 let callDirection = 'outbound'   // overridden to 'inbound' on CALL_INCOMING
 
-baresip.on('CALL_INCOMING', msg => {
-  callDirection = 'inbound'
-  state.call    = { status: 'incoming', uri: msg.peeruri ?? '', direction: 'inbound' }
-
-  const mode = db.prepare('SELECT value FROM config WHERE key = ?').get('mode')?.value
-  if (mode === 'RECEIVER') {
-    baresip.send('accept').catch(err => {
-      console.error('[call] auto-accept failed:', err.message)
-    })
-  }
-})
-
-baresip.on('CALL_RINGING', () => {
-  if (state.call) state.call.status = 'ringing'
-})
-
-baresip.on('CALL_ESTABLISHED', msg => {
-  callStartedAt  = new Date().toISOString()
-  const uri      = msg.peeruri ?? state.call?.uri ?? ''
-  state.call     = { status: 'established', uri, direction: callDirection }
-})
-
-baresip.on('CALL_CLOSED', () => {
+function closeCall() {
   if (callStartedAt && state.call) {
     const endedAt  = new Date().toISOString()
     const duration = Math.round((Date.now() - new Date(callStartedAt).getTime()) / 1000)
@@ -44,7 +22,25 @@ baresip.on('CALL_CLOSED', () => {
   callStartedAt = null
   callDirection = 'outbound'
   state.call    = null
+}
+
+baresip.on('CALL_INCOMING', msg => {
+  callDirection = 'inbound'
+  state.call    = { status: 'incoming', uri: msg.peeruri ?? '', direction: 'inbound' }
 })
+
+baresip.on('CALL_RINGING', () => {
+  if (state.call) state.call.status = 'ringing'
+})
+
+baresip.on('CALL_ESTABLISHED', msg => {
+  callStartedAt  = new Date().toISOString()
+  const uri      = msg.peeruri ?? state.call?.uri ?? ''
+  state.call     = { status: 'established', uri, direction: callDirection, startedAt: callStartedAt }
+})
+
+baresip.on('CALL_CLOSED', closeCall)
+baresip.on('disconnected', closeCall)
 
 baresip.on('REGISTER_OK',   () => { state.registration = 'ok' })
 baresip.on('REGISTER_FAIL', () => { state.registration = 'fail' })
