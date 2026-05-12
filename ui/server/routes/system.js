@@ -42,6 +42,13 @@ async function dpkgVersion(pkg) {
   } catch { return null }
 }
 
+async function raspberryPiModel() {
+  const raw = await readText('/sys/firmware/devicetree/base/model')
+  if (!raw) return undefined
+  const model = raw.replace(/\0/g, '').trim()
+  return /^Raspberry Pi\b/i.test(model) ? model : undefined
+}
+
 async function getSystemInfo() {
   const [load1, load5, load15] = os.loadavg()
   const totalMem = os.totalmem()
@@ -70,6 +77,7 @@ async function getSystemInfo() {
 
   // Firmware version written at image build time
   const fwVersion = await readText('/etc/opensonix-release')
+  const rpiModel = await raspberryPiModel()
 
   // Software versions (parallel dpkg queries)
   const [baresipVersion, libopusVersion, alsaVersion] = await Promise.all([
@@ -86,6 +94,7 @@ async function getSystemInfo() {
     network: { iface: netIface, state: netState, speed: netSpeed },
     datetime: new Date().toISOString(),
     osName,
+    raspberryPiModel: rpiModel,
     versions: {
       firmware:  fwVersion ?? 'dev',
       kernel:    os.release(),

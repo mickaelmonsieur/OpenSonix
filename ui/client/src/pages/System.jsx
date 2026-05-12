@@ -69,6 +69,9 @@ function SystemInfo({ apiFetch }) {
           <InfoRow label={t('system.network')}   value={netLabel} />
           <InfoRow label={t('system.datetime')}  value={datetime} />
           <InfoRow label={t('system.os')}        value={info.osName} />
+          {info.raspberryPiModel && (
+            <InfoRow label={t('system.raspberry_pi_model')} value={info.raspberryPiModel} />
+          )}
         </tbody>
       </table>
 
