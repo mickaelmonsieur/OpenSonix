@@ -67,6 +67,46 @@ dtoverlay=hifiberry-dacplusadc
 AUDIOHATEOF
 fi
 
+mkdir -p "${ROOTFS_DIR}/etc/alsa/conf.d"
+cat > "${ROOTFS_DIR}/etc/alsa/conf.d/99-opensonix-hifiberry.conf" << 'ALSAHATEOF'
+# OpenSonix HiFiBerry DAC+ ADC full-duplex PCMs.
+# The HAT exposes S32_LE through dmix/dsnoop; the outer plug layer lets
+# baresip keep using its S16_LE audio pipeline while ALSA performs conversion.
+pcm.opensonix_hifiberry_play {
+  type plug
+  slave.pcm {
+    type dmix
+    ipc_key 7060001
+    slave {
+      pcm "hw:CARD=sndrpihifiberry,DEV=0"
+      format S32_LE
+      rate 48000
+      channels 2
+      period_time 0
+      period_size 1024
+      buffer_size 8192
+    }
+  }
+}
+
+pcm.opensonix_hifiberry_cap {
+  type plug
+  slave.pcm {
+    type dsnoop
+    ipc_key 7060002
+    slave {
+      pcm "hw:CARD=sndrpihifiberry,DEV=0"
+      format S32_LE
+      rate 48000
+      channels 2
+      period_time 0
+      period_size 1024
+      buffer_size 8192
+    }
+  }
+}
+ALSAHATEOF
+
 # ── Console keyboard ──────────────────────────────────────────────────────────
 # OpenSonix intentionally skips pi-gen stage2, where Raspberry Pi OS normally
 # installs and configures console-setup/keyboard-configuration.

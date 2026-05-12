@@ -13,6 +13,7 @@ const execFile = promisify(_execFile)
 
 const BARESIP_CONF     = '/etc/baresip/config'
 const BARESIP_ACCOUNTS = '/etc/baresip/accounts'
+const HIFIBERRY_RE     = /hifiberry|sndrpihifiberry|dacplus|dac|adc/i
 
 const genToken = () => randomBytes(16).toString('hex')
 
@@ -50,6 +51,7 @@ function renderBaresipConf(cfg) {
   return [
     `audio_player     alsa,${cfg.audio_device_out}`,
     `audio_source     alsa,${cfg.audio_device_in}`,
+    `audio_alert      alsa,null`,
     `audio_samplerate 48000`,
     `audio_channels   2`,
     ``,
@@ -107,9 +109,19 @@ async function resolveAudioDevices(cfg) {
 }
 
 function pickAudioDevice(current, devices, kind) {
+  const opensonixHiFiBerry = kind === 'capture'
+    ? 'opensonix_hifiberry_cap'
+    : 'opensonix_hifiberry_play'
+  if (
+    devices.includes(opensonixHiFiBerry) &&
+    (!current || current === 'null' || HIFIBERRY_RE.test(current))
+  ) {
+    return opensonixHiFiBerry
+  }
+
   if (current && current !== 'null' && devices.includes(current)) return current
 
-  const hifiberry = pickMatchingDevice(devices, /hifiberry|sndrpihifiberry|dacplus|dac|adc/i)
+  const hifiberry = pickMatchingDevice(devices, HIFIBERRY_RE)
   if (hifiberry) return hifiberry
 
   const preferred = kind === 'capture'
