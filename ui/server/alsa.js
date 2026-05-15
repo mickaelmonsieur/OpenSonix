@@ -8,14 +8,54 @@ const METER_DIR = process.env.OPENSONIX_METER_DIR ?? '/run/opensonix-meter'
 const METER_STALE_MS = 1500
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
 
+async function availableCardIds() {
+  try {
+    const cards = await readFile('/proc/asound/cards', 'utf8')
+    return new Set([...cards.matchAll(/^\s*\d+\s+\[([^\]]+)\]/gm)].map(match => match[1]))
+  } catch {
+    return new Set()
+  }
+}
+
 // Parse `aplay -L` / `arecord -L` output.
 // Non-indented lines are device identifiers; indented lines are descriptions.
-function parseDeviceList(stdout) {
-  return stdout.split('\n')
+function parseDeviceList(stdout, kind, cards) {
+  const devices = stdout.split('\n')
     .filter(line => line.length > 0 && !/^\s/.test(line))
     .map(line => line.trim())
     .filter(device => !device.startsWith('opensonix_meter_'))
+    .filter(device => !device.startsWith('opensonix_volume_'))
+    .filter(device => kind === 'capture' || !device.endsWith('_cap'))
+    .filter(device => kind === 'playback' || !device.endsWith('_play'))
+    .filter(device => !device.startsWith('opensonix_hifiberry_') || cards.has('sndrpihifiberry'))
     .filter(Boolean)
+
+  const selected = ['null']
+  const hifiberry = kind === 'capture'
+    ? 'opensonix_hifiberry_cap'
+    : 'opensonix_hifiberry_play'
+  if (cards.has('sndrpihifiberry') && devices.includes(hifiberry)) {
+    selected.push(hifiberry)
+  }
+
+  const cardNames = [...new Set(
+    devices
+      .map(device => device.match(/CARD=([^,]+)/)?.[1])
+      .filter(Boolean)
+      .filter(card => card !== 'sndrpihifiberry')
+  )]
+
+  for (const card of cardNames) {
+    const candidate = [
+      `default:CARD=${card}`,
+      `plughw:CARD=${card},DEV=0`,
+      `hw:CARD=${card},DEV=0`,
+    ].find(device => devices.includes(device))
+    if (candidate) selected.push(candidate)
+  }
+
+  if (selected.length === 1 && devices.includes('default')) selected.push('default')
+  return selected
 }
 
 function cardFromDevice(device) {
@@ -69,8 +109,11 @@ async function playbackControlMidpoint(card, control) {
 
 export async function listPlaybackDevices() {
   try {
-    const { stdout } = await execFile('aplay', ['-L'])
-    return parseDeviceList(stdout)
+    const [{ stdout }, cards] = await Promise.all([
+      execFile('aplay', ['-L']),
+      availableCardIds(),
+    ])
+    return parseDeviceList(stdout, 'playback', cards)
   } catch {
     return []
   }
@@ -78,8 +121,11 @@ export async function listPlaybackDevices() {
 
 export async function listCaptureDevices() {
   try {
-    const { stdout } = await execFile('arecord', ['-L'])
-    return parseDeviceList(stdout)
+    const [{ stdout }, cards] = await Promise.all([
+      execFile('arecord', ['-L']),
+      availableCardIds(),
+    ])
+    return parseDeviceList(stdout, 'capture', cards)
   } catch {
     return []
   }
