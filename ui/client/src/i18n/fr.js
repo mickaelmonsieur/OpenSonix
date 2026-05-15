@@ -142,6 +142,8 @@ export default {
     datetime:        'Date / heure',
     os:              'OS',
     raspberry_pi_model: 'Modèle Raspberry Pi',
+    serial:          'Serial',
+    mac_address:     'MAC',
     mem_format:      '{used} utilisés / {total} total',
     software_vers:   'Versions logicielles',
     firmware:        'Firmware',

@@ -49,20 +49,39 @@ async function raspberryPiModel() {
   return /^Raspberry Pi\b/i.test(model) ? model : undefined
 }
 
+async function raspberryPiSerial(isRaspberryPi) {
+  if (!isRaspberryPi) return undefined
+  const cpuinfo = await readText('/proc/cpuinfo')
+  const serial = cpuinfo?.match(/^Serial\s*:\s*([0-9a-f]+)$/mi)?.[1]
+  return serial || undefined
+}
+
+async function defaultRouteInterface() {
+  const routes = await readText('/proc/net/route')
+  if (!routes) return null
+  return routes.split('\n').slice(1)
+    .map(line => line.trim().split(/\s+/))
+    .filter(cols => cols.length >= 8 && cols[1] === '00000000' && (parseInt(cols[3], 16) & 0x2))
+    .map(cols => ({ iface: cols[0], metric: parseInt(cols[6], 10) || 0 }))
+    .sort((a, b) => a.metric - b.metric)[0]?.iface ?? null
+}
+
 async function getSystemInfo() {
   const [load1, load5, load15] = os.loadavg()
   const totalMem = os.totalmem()
   const freeMem  = os.freemem()
 
-  // Network: prefer eth0 then wlan0
-  let netIface = null, netState = null, netSpeed = null
-  for (const iface of ['eth0', 'wlan0']) {
+  // Network: prefer the interface carrying the default route, then eth0/wlan0.
+  const defaultIface = await defaultRouteInterface()
+  let netIface = null, netState = null, netSpeed = null, netMac = null
+  for (const iface of [defaultIface, 'eth0', 'wlan0'].filter(Boolean)) {
     const state = await readText(`/sys/class/net/${iface}/operstate`)
     if (state) {
       netIface = iface
       netState = state
       const s = parseInt(await readText(`/sys/class/net/${iface}/speed`) ?? '', 10)
       if (s > 0) netSpeed = s
+      netMac = await readText(`/sys/class/net/${iface}/address`)
       break
     }
   }
@@ -78,6 +97,7 @@ async function getSystemInfo() {
   // Firmware version written at image build time
   const fwVersion = await readText('/etc/opensonix-release')
   const rpiModel = await raspberryPiModel()
+  const rpiSerial = await raspberryPiSerial(Boolean(rpiModel))
 
   // Software versions (parallel dpkg queries)
   const [baresipVersion, libopusVersion, alsaVersion] = await Promise.all([
@@ -91,10 +111,11 @@ async function getSystemInfo() {
     load:    { m1: load1, m5: load5, m15: load15 },
     cpus:    os.cpus().length,
     memory:  { total: totalMem, free: freeMem },
-    network: { iface: netIface, state: netState, speed: netSpeed },
+    network: { iface: netIface, state: netState, speed: netSpeed, mac: netMac },
     datetime: new Date().toISOString(),
     osName,
     raspberryPiModel: rpiModel,
+    raspberryPiSerial: rpiSerial,
     versions: {
       firmware:  fwVersion ?? 'dev',
       kernel:    os.release(),

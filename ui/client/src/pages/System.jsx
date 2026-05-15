@@ -55,6 +55,11 @@ function SystemInfo({ apiFetch }) {
   const datetime = info.datetime
     ? new Date(info.datetime).toLocaleString(locale, { dateStyle: 'short', timeStyle: 'medium' })
     : '—'
+  const rpiDetails = [
+    info.raspberryPiModel,
+    info.raspberryPiSerial ? `${t('system.serial')}: ${info.raspberryPiSerial}` : null,
+    info.network?.mac ? `${info.network.iface} ${t('system.mac_address')}: ${info.network.mac}` : null,
+  ].filter(Boolean).join(' · ')
 
   const v = info.versions ?? {}
 
@@ -70,7 +75,7 @@ function SystemInfo({ apiFetch }) {
           <InfoRow label={t('system.datetime')}  value={datetime} />
           <InfoRow label={t('system.os')}        value={info.osName} />
           {info.raspberryPiModel && (
-            <InfoRow label={t('system.raspberry_pi_model')} value={info.raspberryPiModel} />
+            <InfoRow label={t('system.raspberry_pi_model')} value={rpiDetails} />
           )}
         </tbody>
       </table>
