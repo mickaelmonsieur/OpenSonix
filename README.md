@@ -68,7 +68,31 @@ Any Raspberry Pi with an Ethernet port and a USB or HAT audio interface:
 | Raspberry Pi Zero 2W | ✅ Supported |
 | Raspberry Pi 2 Model B | ⚠️ Untested |
 
-Audio is handled by ALSA — any class-compliant USB audio interface works out of the box.
+Audio is handled by ALSA. Class-compliant USB audio interfaces should work out of the box, while Raspberry Pi audio HATs provide a clean internal add-on option.
+
+### Recommended audio interfaces
+
+#### Raspberry Pi audio HATs
+
+The HiFiBerry DAC+ ADC family is recommended for internal Raspberry Pi builds:
+
+| Interface | Status |
+|---|---|
+| [HiFiBerry DAC+ ADC](https://www.hifiberry.com/shop/boards/dacplus-adc/) | ✅ Tested |
+| [HiFiBerry DAC+ ADC Pro](https://www.hifiberry.com/shop/boards/hifiberry-dac-adc-pro/) | Recommended |
+| [HiFiBerry DAC2 ADC Pro](https://www.hifiberry.com/shop/boards/dac2adcpro/) | Recommended |
+| [HiFiBerry DAC+ ADC Stage Development Kit](https://www.hifiberry.com/shop/0-development-kits/stage-devkit/) | Recommended |
+
+#### USB audio interfaces
+
+USB interfaces are an economical option and are easy to replace in the field:
+
+| Interface | Status |
+|---|---|
+| [Behringer U-Control UCA202](https://www.thomann.de/intl/behringer_ucontrol_uca_202.htm) | ✅ Tested |
+| [Behringer U-Control UCA222](https://www.thomann.de/intl/behringer_ucontrol_uca_222.htm) | Recommended |
+
+For balanced audio wiring, small line transformers such as the [Neutrik NTE1](https://www.thomann.de/intl/neutrik_nte1nf_audiouebertrager.htm) can be used with USB interfaces for less than EUR 15 per channel.
 
 ---
 
@@ -88,7 +112,7 @@ Audio is handled by ALSA — any class-compliant USB audio interface works out o
 
 ## 🔒 Security
 
-OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated MPLS/VPN). Do not expose it directly to the Internet.
+OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated MPLS/VPN). Do not expose it directly to the Internet unless you really know what you are doing and have a strict NAT/firewall setup in place.
 
 - The web UI uses JWT authentication with a 15-minute access token
 - Brute-force protection is built in and configurable (attempts / window)
