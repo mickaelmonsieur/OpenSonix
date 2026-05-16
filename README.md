@@ -149,6 +149,8 @@ If OpenSonix saves you from buying a Tieline, consider buying me a coffee!
 
 [![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/Y8Y5MXCW)
 
+You can also help expand OpenSonix hardware support through the [Amazon wishlist](https://www.amazon.fr/hz/wishlist/ls/3PY89LUR6FVNP?ref_=wl_share), which includes HiFiBerry boards I would like to test and document.
+
 <small>Some product links are affiliate links. They help fund OpenSonix development and test hardware such as Raspberry Pi boards, HiFiBerry HATs and professional audio interfaces.</small>
 
 ---
