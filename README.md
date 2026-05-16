@@ -136,6 +136,21 @@ Any Raspberry Pi with an Ethernet port and a USB or HAT audio interface:
 
 Audio is handled by ALSA. Class-compliant USB audio interfaces should work out of the box, while Raspberry Pi audio HATs provide a clean internal add-on option.
 
+### Low-cost OpenSonix kit
+
+A complete two-device OpenSonix sender/receiver kit can be built for about **EUR 200 including taxes**, using common Raspberry Pi and USB audio parts.
+
+| Item | Price |
+|---|---:|
+| Raspberry Pi 3 Model B+ | ~ EUR 50 |
+| Raspberry Pi USB-C 5.1V / 3A power supply | ~ EUR 15 |
+| SanDisk Ultra microSDHC 32GB + SD adapter | ~ EUR 15 |
+| Behringer U-Control UCA202 USB audio interface | ~ EUR 20 |
+| **Subtotal per device** | **~ EUR 100** |
+| **Two-device sender/receiver kit** | **~ EUR 200** |
+
+Prices are indicative and may vary by country, stock and supplier.
+
 ### Recommended audio interfaces
 
 #### Raspberry Pi audio HATs
