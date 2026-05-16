@@ -10,7 +10,9 @@
 
 It wraps [baresip](https://github.com/baresip/baresip) (SIP + OPUS) with a modern web interface, giving broadcast engineers a reliable, affordable IP audio link — the open alternative to Tieline, Comrex and AEQ.
 
-> 📸 *Screenshots coming soon — UI is fully functional today.*
+![OpenSonix dashboard](docs/images/dashboard.png)
+
+<sub>OpenSonix dashboard showing link status, call duration, real-time VU meters and sender/receiver controls.</sub>
 
 ---
 
@@ -34,6 +36,31 @@ OpenSonix is currently in **beta**. It has been tested in lab and real remote Pi
 - **Factory reset** — restore to defaults in one click
 - **Multilingual UI** — English (default) and French
 - **Runs headless** — Raspberry Pi OS Lite, no desktop, no X server
+
+---
+
+## Screenshots
+
+<details>
+<summary>Configuration</summary>
+
+![OpenSonix configuration page](docs/images/config.png)
+
+</details>
+
+<details>
+<summary>Network settings</summary>
+
+![OpenSonix network settings page](docs/images/network.png)
+
+</details>
+
+<details>
+<summary>System information and maintenance</summary>
+
+![OpenSonix system page](docs/images/system.png)
+
+</details>
 
 ---
 
