@@ -9,7 +9,7 @@ import baresip                    from './baresip.js'
 import { verifyAccess }           from './auth.js'
 import db                         from './db.js'
 import { getAudioLevels }         from './alsa.js'
-import { state }                  from './state.js'   // side-effect: registers baresip event handlers
+import { state, stateEvents }     from './state.js'   // side-effect: registers baresip event handlers
 import './watchdog.js'               // side-effect: auto-reconnect for SENDER mode
 
 import authRoutes    from './routes/auth.js'
@@ -109,6 +109,19 @@ baresip.on('CALL_CLOSED',      msg => {
 })
 baresip.on('REGISTER_OK',      ()  => broadcast('reg:ok',           {}))
 baresip.on('REGISTER_FAIL',    msg => broadcast('reg:fail',         { reason: msg.reason ?? '' }))
+
+stateEvents.on('call:sync', call => {
+  if (call?.status === 'established') {
+    broadcast('call:established', {
+      uri:       call.uri ?? '',
+      startedAt: call.startedAt ?? new Date().toISOString(),
+    })
+    startLevelPolling()
+  } else if (!call) {
+    stopLevelPolling()
+    broadcast('call:closed', { reason: 'baresip call sync' })
+  }
+})
 
 fastify.get('/ws', { websocket: true }, (socket, req) => {
   const token = req.query?.token

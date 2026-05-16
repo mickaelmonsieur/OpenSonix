@@ -6,7 +6,7 @@ import { networkInterfaces }                    from 'node:os'
 import db                                       from '../db.js'
 import baresip                                  from '../baresip.js'
 import { authenticate, requirePasswordChanged } from '../auth.js'
-import { state }                                from '../state.js'
+import { state, syncCallStateFromBaresip }      from '../state.js'
 import {
   applyHardwareSafetyDefaults,
   listPlaybackDevices,
@@ -225,6 +225,12 @@ export default async function configRoutes(fastify) {
 
   // GET /api/status
   fastify.get('/status', async () => {
+    try {
+      await syncCallStateFromBaresip()
+    } catch (err) {
+      fastify.log.warn({ err }, 'baresip call sync failed')
+    }
+
     const cfg = cfgMap()
     const sip = getSip()
     const dialUri = (cfg.mode === 'SENDER' && sip.registrar && sip.remote_user)
