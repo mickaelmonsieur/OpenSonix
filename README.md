@@ -232,6 +232,17 @@ npm run dev        # starts backend (port 3000) + Vite dev server (port 5173)
 
 I'm available for consulting for radio stations interested in deploying OpenSonix in production.
 
+Custom OpenSonix Pro appliances can also be built on request, tailored to your studio and transmitter-site requirements:
+
+- 19" 1U aluminium rack enclosure
+- Enclosed 5V Mean Well power supply
+- XLR, 6.3 mm jack, RCA or other audio I/O options
+- HiFiBerry DAC / ADC audio boards
+- IEC C14 power inlet with fuse
+- Neutrik EtherCON network connector
+- Front-panel status LEDs
+- Optional front-panel mini OLED display
+
 👉 [mickael.be](https://www.mickael.be)
 
 ---
