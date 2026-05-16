@@ -7,6 +7,7 @@ import {
   checkPassword,
   authenticate,
 } from '../auth.js'
+import { setOpenSonixSystemPassword } from '../system-password.js'
 
 const REFRESH_COOKIE = 'refresh_token'
 const REFRESH_COOKIE_OPTS = {
@@ -172,6 +173,16 @@ export default async function authRoutes(fastify) {
       return reply.code(400).send({
         error: `Mot de passe trop faible : ${strengthErrors.join(', ')}.`,
       })
+    }
+
+    try {
+      await setOpenSonixSystemPassword(newPassword)
+    } catch (err) {
+      if (err.code === 'INVALID_SYSTEM_PASSWORD') {
+        return reply.code(400).send({ error: 'Password contains unsupported characters.' })
+      }
+      req.log.error({ err }, 'failed to update system password')
+      return reply.code(500).send({ error: 'Unable to update the system password.' })
     }
 
     const hash = await hashPassword(newPassword)

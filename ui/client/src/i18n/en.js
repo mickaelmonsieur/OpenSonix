@@ -197,7 +197,7 @@ export default {
   },
   change_password: {
     title:          'Change password',
-    subtitle:       'You must set a new password before continuing.',
+    subtitle:       'You must set a new password before continuing. This also updates the system "opensonix" user password.',
     current:        'Current password',
     new_pw:         'New password',
     confirm:        'Confirm',

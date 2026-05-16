@@ -168,15 +168,28 @@ KEYBOARDEOF
 on_chroot << 'EOF'
 DEBIAN_FRONTEND=noninteractive dpkg-reconfigure keyboard-configuration console-setup
 setupcon --force --save-only -v
+
+# Root should never be a login account on OpenSonix images. Administration is
+# performed through the opensonix user and sudo.
+passwd -l root || true
+
+# Keep the default system password unusable until the web first-login flow sets
+# a strong password for both the UI and the opensonix system user.
+passwd -l opensonix || true
 EOF
 
 # ── SSH hardening ─────────────────────────────────────────────────────────────
-# Disable password auth — keys only.
+# Allow password auth for the opensonix user once the first-login flow has set
+# a strong system password. Root login stays explicitly disabled.
 mkdir -p "${ROOTFS_DIR}/etc/ssh/sshd_config.d"
 rm -f "${ROOTFS_DIR}/etc/ssh/sshd_config.d/rename_user.conf"
 cat > "${ROOTFS_DIR}/etc/ssh/sshd_config.d/99-opensonix.conf" << 'SSHEOF'
-PasswordAuthentication no
+PermitRootLogin no
+PasswordAuthentication yes
 ChallengeResponseAuthentication no
+KbdInteractiveAuthentication no
+PermitEmptyPasswords no
+AllowUsers opensonix
 SSHEOF
 
 # Install authorized key for the opensonix user.

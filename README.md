@@ -54,7 +54,7 @@ Plug in an Ethernet cable, power on the Pi, then open:
 http://opensonix.local
 ```
 
-Default credentials: `admin` / `opensonix` — **you will be asked to change the password on first login.**
+Default web credentials: `admin` / `opensonix` — **you will be asked to change the password on first login.** This also sets the system password for the `opensonix` user used by SSH and the physical console.
 
 ### 3. Configure
 
@@ -74,7 +74,7 @@ OpenSonix is designed for closed networks such as studio LANs, VPNs or dedicated
 | Service | Port | Notes |
 |---|---:|---|
 | Web UI | `80/tcp` | Browser access to the configuration interface |
-| SSH | `22/tcp` | Enabled for maintenance and diagnostics |
+| SSH | `22/tcp` | Enabled for maintenance and diagnostics; root login is disabled |
 | SIP | `7060/udp` | Default SIP listen port, configurable in the UI |
 | mDNS / Bonjour | `5353/udp` | Used for `http://opensonix.local` discovery on local networks |
 | RTP media | dynamic UDP | Negotiated by baresip during calls; keep both devices on a trusted LAN/VPN or allow media traffic between them |
@@ -151,7 +151,8 @@ OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated M
 
 - The web UI uses JWT authentication with a 15-minute access token
 - Brute-force protection is built in and configurable (attempts / window)
-- Always change the default web password on first login
+- The default system password is locked until the first web password change
+- Always change the default web password on first login; it also becomes the `opensonix` system password
 
 If you need to link two sites over the Internet, set up a VPN or MPLS tunnel between them first.
 

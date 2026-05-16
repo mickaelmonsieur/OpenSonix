@@ -197,7 +197,7 @@ export default {
   },
   change_password: {
     title:          'Changer le mot de passe',
-    subtitle:       'Vous devez définir un nouveau mot de passe avant de continuer.',
+    subtitle:       'Vous devez définir un nouveau mot de passe avant de continuer. Cela met aussi à jour le mot de passe de l’utilisateur système "opensonix".',
     current:        'Mot de passe actuel',
     new_pw:         'Nouveau mot de passe',
     confirm:        'Confirmer',

@@ -9,6 +9,7 @@ import bcrypt                                from 'bcryptjs'
 import db                                    from '../db.js'
 import { writeNetworkConfig }                from '../network.js'
 import { authenticate, requirePasswordChanged } from '../auth.js'
+import { setOpenSonixSystemPassword }        from '../system-password.js'
 import { applyBaresipConfig }               from './config.js'
 
 // Magic header identifying a valid .osonix backup file (4 bytes: "OSX\x01")
@@ -455,6 +456,12 @@ export default async function systemRoutes(fastify) {
     })()
 
     // 2. Reset admin password + force change on next login
+    try {
+      await setOpenSonixSystemPassword('opensonix')
+    } catch (err) {
+      console.error('[system] system password reset skipped:', err.message)
+    }
+
     const hash = await bcrypt.hash('opensonix', 10)
     db.prepare('UPDATE users SET password = ?, must_change_password = 1 WHERE username = ?')
       .run(hash, 'admin')
