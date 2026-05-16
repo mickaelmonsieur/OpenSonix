@@ -89,10 +89,10 @@ USB interfaces are an economical option and are easy to replace in the field:
 
 | Interface | Status |
 |---|---|
-| [Behringer U-Control UCA202](https://www.thomann.de/intl/behringer_ucontrol_uca_202.htm) | ✅ Tested |
-| [Behringer U-Control UCA222](https://www.thomann.de/intl/behringer_ucontrol_uca_222.htm) | Recommended |
+| [Behringer U-Control UCA202](https://thmn.to/thoprod/191768) | ✅ Tested |
+| [Behringer U-Control UCA222](https://thmn.to/thoprod/246611) | Recommended |
 
-For balanced audio wiring, small line transformers such as the [Neutrik NTE1](https://www.thomann.de/intl/neutrik_nte1nf_audiouebertrager.htm) can be used with USB interfaces for less than EUR 15 per channel.
+For balanced audio wiring, small line transformers such as the [Neutrik NTE1](https://thmn.to/thoprod/167616) can be used with USB interfaces for less than EUR 15 per channel.
 
 ---
 
@@ -148,6 +148,8 @@ I'm available for consulting for radio stations interested in deploying OpenSoni
 If OpenSonix saves you from buying a Tieline, consider buying me a coffee!
 
 [![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/Y8Y5MXCW)
+
+<small>Some product links are affiliate links. They help fund OpenSonix development and test hardware such as Raspberry Pi boards, HiFiBerry HATs and professional audio interfaces.</small>
 
 ---
 
