@@ -196,6 +196,8 @@ I'm available for consulting for radio stations interested in deploying OpenSoni
 
 If OpenSonix saves you from buying a Tieline, consider buying me a coffee!
 
+[Sponsor OpenSonix on GitHub](https://github.com/sponsors/mickaelmonsieur) for recurring support.
+
 [![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/Y8Y5MXCW)
 
 You can also help expand OpenSonix hardware support through the [Amazon wishlist](https://www.amazon.fr/hz/wishlist/ls/3PY89LUR6FVNP?ref_=wl_share), which includes HiFiBerry boards I would like to test and document.
