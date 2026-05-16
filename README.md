@@ -8,8 +8,6 @@
 
 It wraps [baresip](https://github.com/baresip/baresip) (SIP + OPUS) with a modern web interface, giving broadcast engineers a reliable, affordable IP audio link — the open alternative to Tieline, Comrex and AEQ.
 
-Tieline, Comrex, AEQ and Barix are trademarks of their respective owners. OpenSonix is not affiliated with, endorsed by, or sponsored by these companies.
-
 > 📸 *Screenshots coming soon — UI is fully functional today.*
 
 ---
@@ -207,3 +205,5 @@ You can also help expand OpenSonix hardware support through the [Amazon wishlist
 GNU General Public License v3.0
 
 https://www.gnu.org/licenses/gpl-3.0.en.html
+
+<small>Tieline, Comrex, AEQ, Deva and Barix are trademarks of their respective owners. OpenSonix is not affiliated with, endorsed by, or sponsored by these companies.</small>
