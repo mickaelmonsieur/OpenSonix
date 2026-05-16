@@ -270,7 +270,7 @@ Custom OpenSonix Pro appliances can also be built on request, tailored to your s
 
 ---
 
-## ☕ Buy me a coffee
+## ☕ Support OpenSonix
 
 If OpenSonix saves you from buying a Tieline, consider buying me a coffee!
 
@@ -279,6 +279,12 @@ If OpenSonix saves you from buying a Tieline, consider buying me a coffee!
 [![ko-fi](https://www.ko-fi.com/img/donate_sm.png)](https://ko-fi.com/Y8Y5MXCW)
 
 You can also help expand OpenSonix hardware support through the [Amazon wishlist](https://www.amazon.fr/hz/wishlist/ls/3PY89LUR6FVNP?ref_=wl_share), which includes HiFiBerry boards I would like to test and document.
+
+Thanks to [Belstream](https://www.belstream.com), OpenSonix also receives EUR 1 for every account created through this partner link:
+
+[Create a Belstream account and support OpenSonix](https://console.belstream.com/register?partner=mickaelmonsieur)
+
+So even if you cannot buy a EUR 5 coffee, a few clicks can still help the project without costing you money. You will also discover a very complete and affordable radio streaming service along the way.
 
 <small>Some product links are affiliate links. They help fund OpenSonix development and test hardware such as Raspberry Pi boards, HiFiBerry HATs and professional audio interfaces.</small>
 
