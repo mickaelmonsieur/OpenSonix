@@ -9,6 +9,7 @@ import baresip                    from './baresip.js'
 import { verifyAccess }           from './auth.js'
 import db                         from './db.js'
 import { getAudioLevels }         from './alsa.js'
+import { setLinkLed }             from './gpio.js'
 import { state, stateEvents }     from './state.js'   // side-effect: registers baresip event handlers
 import './watchdog.js'               // side-effect: auto-reconnect for SENDER mode
 
@@ -93,6 +94,7 @@ function stopLevelPolling() {
 baresip.on('connected',        ()  => broadcast('baresip:connected', {}))
 baresip.on('disconnected',     ()  => {
   stopLevelPolling()
+  setLinkLed(false)
   broadcast('baresip:lost', {})
   broadcast('call:closed', { reason: 'baresip disconnected' })
 })
@@ -103,10 +105,12 @@ baresip.on('CALL_ESTABLISHED', msg => {
     uri:       msg.peeruri ?? '',
     startedAt: state.call?.startedAt ?? new Date().toISOString(),
   })
+  setLinkLed(true)
   startLevelPolling()
 })
 baresip.on('CALL_CLOSED',      msg => {
   stopLevelPolling()
+  setLinkLed(false)
   broadcast('call:closed', { reason: msg.reason ?? '' })
 })
 baresip.on('REGISTER_OK',      ()  => broadcast('reg:ok',           {}))
@@ -118,9 +122,11 @@ stateEvents.on('call:sync', call => {
       uri:       call.uri ?? '',
       startedAt: call.startedAt ?? new Date().toISOString(),
     })
+    setLinkLed(true)
     startLevelPolling()
   } else if (!call) {
     stopLevelPolling()
+    setLinkLed(false)
     broadcast('call:closed', { reason: 'baresip call sync' })
   }
 })
@@ -155,7 +161,8 @@ try {
   process.exit(1)
 }
 
-const shutdown = () => {
+const shutdown = async () => {
+  await setLinkLed(false).catch(() => {})
   baresip.destroy()
   fastify.close(() => process.exit(0))
 }

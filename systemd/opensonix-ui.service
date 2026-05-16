@@ -5,7 +5,7 @@ Wants=baresip.service
 
 [Service]
 User=opensonix
-SupplementaryGroups=audio
+SupplementaryGroups=audio gpio
 WorkingDirectory=/opt/opensonix/ui
 ExecStart=/usr/bin/node server/index.js
 Restart=always

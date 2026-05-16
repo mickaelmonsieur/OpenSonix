@@ -21,7 +21,7 @@ install -d -m 755 -o opensonix -g opensonix /home/opensonix
 echo 'opensonix:opensonix' | chpasswd
 
 usermod -aG audio baresip
-usermod -aG audio opensonix
+usermod -aG audio,gpio opensonix
 EOF
 
 install -m 644 "${STAGE_DIR}/files/systemd/baresip.service"      "${ROOTFS_DIR}/etc/systemd/system/baresip.service"
