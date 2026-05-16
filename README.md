@@ -3,6 +3,8 @@
 [![Release](https://img.shields.io/github/v/release/mickaelmonsieur/OpenSonix?include_prereleases)](https://github.com/mickaelmonsieur/OpenSonix/releases)
 [![Build Raspberry Pi Image](https://github.com/mickaelmonsieur/OpenSonix/actions/workflows/build-image.yml/badge.svg)](https://github.com/mickaelmonsieur/OpenSonix/actions/workflows/build-image.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Open Source](https://img.shields.io/badge/open%20source-GPL--3.0-brightgreen.svg)](LICENCE)
+[![Ko-fi](https://img.shields.io/badge/ko--fi-support-ff5e5b?logo=kofi&logoColor=white)](https://ko-fi.com/Y8Y5MXCW)
 
 **OpenSonix** is an open-source IP audio codec (STL — Studio-to-Transmitter Link) for broadcast radio, running on a Raspberry Pi.
 
