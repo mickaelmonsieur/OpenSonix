@@ -32,10 +32,21 @@ OpenSonix is currently in **beta**. It has been tested in lab and real remote Pi
 - **Network config** — DHCP or static IP, hostname, all from the UI
 - **NTP + timezone** — configure NTP servers and timezone from the web interface
 - **Security built-in** — Brute-force protection on the web UI, forced password change on first login
+- **HTTP/JSON API** — the web UI is powered by a local REST-style API, usable for automation and integration
 - **Diagnostic report** — one-click full system dump to paste into a GitHub Issue
 - **Factory reset** — restore to defaults in one click
 - **Multilingual UI** — English (default) and French
 - **Runs headless** — Raspberry Pi OS Lite, no desktop, no X server
+
+---
+
+## API
+
+OpenSonix includes a local HTTP/JSON API used by the web interface.
+
+This API can also be used for automation, monitoring or integration with external tools by reproducing the same authenticated requests made by the UI. It currently covers status, configuration, network settings, call control, system operations and diagnostics.
+
+The API is not formally documented yet and may change between beta releases. For now, browser developer tools are the best way to inspect the requests made by the UI.
 
 ---
 
