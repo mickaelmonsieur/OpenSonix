@@ -15,6 +15,7 @@ import './watchdog.js'               // side-effect: auto-reconnect for SENDER m
 import authRoutes    from './routes/auth.js'
 import callRoutes    from './routes/call.js'
 import configRoutes, { applyBaresipConfig } from './routes/config.js'
+import historyRoutes from './routes/history.js'
 import networkRoutes from './routes/network.js'
 import systemRoutes  from './routes/system.js'
 
@@ -41,6 +42,7 @@ if (hasDist) {
 await fastify.register(authRoutes,    { prefix: '/api/auth' })
 await fastify.register(callRoutes,    { prefix: '/api/call' })
 await fastify.register(configRoutes,  { prefix: '/api' })
+await fastify.register(historyRoutes, { prefix: '/api/history' })
 await fastify.register(networkRoutes, { prefix: '/api/network' })
 await fastify.register(systemRoutes,  { prefix: '/api/system' })
 

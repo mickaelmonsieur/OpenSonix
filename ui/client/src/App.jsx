@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, NavLink, useNavigate } from 'react-router-dom'
 import { useI18n } from './i18n/index.jsx'
 import Dashboard      from './pages/Dashboard.jsx'
 import Config         from './pages/Config.jsx'
+import History        from './pages/History.jsx'
 import Network        from './pages/Network.jsx'
 import System         from './pages/System.jsx'
 import ChangePassword from './pages/ChangePassword.jsx'
@@ -115,6 +116,7 @@ function Navbar() {
       <NavLink to="/" className="navbar-brand">OpenSonix</NavLink>
       <div className="navbar-links">
         <NavLink to="/"        end>{t('nav.dashboard')}</NavLink>
+        <NavLink to="/history"    >{t('nav.history')}</NavLink>
         <NavLink to="/config"     >{t('nav.config')}</NavLink>
         <NavLink to="/network"    >{t('nav.network')}</NavLink>
         <NavLink to="/system"     >{t('nav.system')}</NavLink>
@@ -210,6 +212,7 @@ export default function App() {
             <Navbar />
             <Routes>
               <Route path="/"        element={<Dashboard />} />
+              <Route path="/history" element={<History />} />
               <Route path="/config"  element={<Config />} />
               <Route path="/network" element={<Network />} />
               <Route path="/system"  element={<System />} />

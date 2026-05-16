@@ -17,14 +17,16 @@ let lastSyncAt = 0
 
 const SYNC_MIN_INTERVAL = 1_500
 
-function closeCall() {
+function closeCall({ record = true } = {}) {
   if (callStartedAt && state.call) {
     const endedAt  = new Date().toISOString()
     const duration = Math.round((Date.now() - new Date(callStartedAt).getTime()) / 1000)
-    db.prepare(
-      `INSERT INTO call_history (direction, remote_uri, started_at, ended_at, duration)
-       VALUES (?, ?, ?, ?, ?)`
-    ).run(state.call.direction, state.call.uri, callStartedAt, endedAt, duration)
+    if (record) {
+      db.prepare(
+        `INSERT INTO call_history (direction, remote_uri, started_at, ended_at, duration)
+         VALUES (?, ?, ?, ?, ?)`
+      ).run(state.call.direction, state.call.uri, callStartedAt, endedAt, duration)
+    }
   }
   callStartedAt = null
   callDirection = 'outbound'
@@ -155,8 +157,8 @@ baresip.on('CALL_ESTABLISHED', msg => {
   state.call     = { status: 'established', uri, direction: callDirection, startedAt: callStartedAt }
 })
 
-baresip.on('CALL_CLOSED', closeCall)
-baresip.on('disconnected', closeCall)
+baresip.on('CALL_CLOSED', () => closeCall())
+baresip.on('disconnected', () => closeCall({ record: false }))
 
 baresip.on('REGISTER_OK',   () => { state.registration = 'ok' })
 baresip.on('REGISTER_FAIL', () => { state.registration = 'fail' })
