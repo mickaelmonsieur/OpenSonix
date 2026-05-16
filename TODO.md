@@ -4,23 +4,23 @@ Features not yet implemented, in no particular order of priority.
 
 ---
 
-## Statistiques de lien (métriques ctrl_tcp baresip)
+## Link statistics (baresip ctrl_tcp metrics)
 
-Afficher les métriques de qualité du lien en temps réel dans le Dashboard.
+Display real-time link quality metrics in the Dashboard.
 
-baresip expose via `ctrl_tcp` :
-- commande `callstat` → jitter (ms), perte de paquets (%), RTT (ms), débit TX/RX
-- commande `austat`   → statistiques audio (underrun, overrun)
+baresip exposes through `ctrl_tcp`:
+- `callstat` command -> jitter (ms), packet loss (%), RTT (ms), TX/RX bitrate
+- `austat` command -> audio statistics (underrun, overrun)
 
-Implémentation côté serveur :
-- Pendant un appel établi, interroger `callstat` toutes les 2–5 s via `baresip.send('callstat')`
-- Pousser les données au frontend via le WebSocket (`{ type: 'call:stats', data: {...} }`)
+Server-side implementation:
+- During an established call, poll `callstat` every 2-5 s via `baresip.send('callstat')`
+- Push the data to the frontend through WebSocket (`{ type: 'call:stats', data: {...} }`)
 
-Implémentation côté UI :
-- Panneau dans le Dashboard, visible uniquement en appel établi
-- Afficher jitter, perte paquets, RTT sous forme de valeurs numériques + indicateur coloré
-  (vert / orange / rouge selon des seuils broadcast : jitter < 5 ms, perte < 0.1 %)
-- Historique graphique (sparkline 60 s) optionnel
+UI-side implementation:
+- Dashboard panel, visible only during an established call
+- Display jitter, packet loss and RTT as numeric values with a colored indicator
+  (green / orange / red based on broadcast thresholds: jitter < 5 ms, loss < 0.1%)
+- Optional 60 s sparkline history
 
 ---
 
@@ -80,6 +80,45 @@ Two sub-features:
    so the far-end can also control equipment.
 
 Stack: `serialport` npm package. Default: 9600 8N1, configurable in UI.
+
+---
+
+## Front-panel OLED display
+
+Support small I2C OLED displays for standalone appliance builds, such as
+1.3" SH1106 128x64 modules (white/blue OLED, IIC/I2C).
+
+Display candidates:
+- Device role (Sender / Receiver)
+- Link state (connected / disconnected)
+- Remote peer / target IP
+- Call duration
+- IP address and hostname
+- Audio level summary or clipping warning
+- Boot / update / error messages
+
+Implementation notes:
+- Use Raspberry Pi I2C (`/dev/i2c-*`)
+- Render through a Node.js OLED library or a small local helper daemon
+- Keep the UI optional and auto-disabled when no display is detected
+
+---
+
+## ON AIR status LEDs via GPIO
+
+Support front-panel or external **ON AIR** LEDs driven by Raspberry Pi GPIO pins.
+
+Use cases:
+- Local ON AIR indicator when a SIP link is established
+- TX/RX activity LEDs
+- Warning LED for disconnected link, audio clipping or service fault
+- Remote relay output for studio/transmitter signaling
+
+Implementation notes:
+- GPIO mapping configurable from the web UI
+- Active-high / active-low option per output
+- Optional blinking patterns for warning states
+- Should integrate with the future GPIO / contact-closure feature
 
 ---
 
