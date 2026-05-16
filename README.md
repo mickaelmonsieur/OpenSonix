@@ -1,10 +1,20 @@
 # OpenSonix
 
+[![Release](https://img.shields.io/github/v/release/mickaelmonsieur/OpenSonix?include_prereleases)](https://github.com/mickaelmonsieur/OpenSonix/releases)
+[![Build Raspberry Pi Image](https://github.com/mickaelmonsieur/OpenSonix/actions/workflows/build-image.yml/badge.svg)](https://github.com/mickaelmonsieur/OpenSonix/actions/workflows/build-image.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
 **OpenSonix** is an open-source IP audio codec (STL — Studio-to-Transmitter Link) for broadcast radio, running on a Raspberry Pi.
 
 It wraps [baresip](https://github.com/baresip/baresip) (SIP + OPUS) with a modern web interface, giving broadcast engineers a reliable, affordable IP audio link — the open alternative to Tieline, Comrex and AEQ.
 
 > 📸 *Screenshots coming soon — UI is fully functional today.*
+
+---
+
+## 🚧 Project status
+
+OpenSonix is currently in **beta**. It has been tested in lab and real remote Pi-to-Pi links, but you should still test your exact network, audio interface and failure scenarios before using it for unattended critical broadcast service.
 
 ---
 
@@ -57,6 +67,30 @@ That's it.
 
 ---
 
+## 🌐 Network requirements
+
+OpenSonix is designed for closed networks such as studio LANs, VPNs or dedicated MPLS links.
+
+| Service | Port | Notes |
+|---|---:|---|
+| Web UI | `80/tcp` | Browser access to the configuration interface |
+| SSH | `22/tcp` | Enabled for maintenance and diagnostics |
+| SIP | `7060/udp` | Default SIP listen port, configurable in the UI |
+| mDNS / Bonjour | `5353/udp` | Used for `http://opensonix.local` discovery on local networks |
+| RTP media | dynamic UDP | Negotiated by baresip during calls; keep both devices on a trusted LAN/VPN or allow media traffic between them |
+
+NAT traversal has not been tested yet. For Internet links, use a VPN or a properly controlled routed network; future versions may add SIP relay support.
+
+---
+
+## 🔄 Upgrades
+
+At the moment, upgrading to a newer OpenSonix image requires reflashing the SD card.
+
+Before reflashing, export your configuration from the **System → Backup / Restore** page. After booting the new image, import the saved configuration to restore credentials, SIP settings, network settings and audio configuration.
+
+---
+
 ## 🔧 Compatible hardware
 
 Any Raspberry Pi with an Ethernet port and a USB or HAT audio interface:
@@ -64,7 +98,8 @@ Any Raspberry Pi with an Ethernet port and a USB or HAT audio interface:
 | Board | Status |
 |---|---|
 | Raspberry Pi 4 Model B | ✅ Recommended |
-| Raspberry Pi 3 Model B/B+ | ✅ Supported |
+| Raspberry Pi 3 Model B+ | ✅ Tested |
+| Raspberry Pi 3 Model B | ✅ Supported |
 | Raspberry Pi Zero 2W | ✅ Supported |
 | Raspberry Pi 2 Model B | ⚠️ Untested |
 
@@ -120,6 +155,16 @@ OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated M
 
 If you need to link two sites over the Internet, set up a VPN or MPLS tunnel between them first.
 
+### Known limitations
+
+- NAT traversal has not been tested yet
+- Upgrades currently require reflashing the SD card, then importing a backup
+- OpenSonix is still beta software and should be validated on your own hardware before production use
+
+### Broadcast disclaimer
+
+OpenSonix is provided without warranty. It is your responsibility to test the system before on-air use, provide backup links where needed, and ensure that your deployment meets your operational, legal and safety requirements. The authors are not responsible for broadcast outages, lost revenue, equipment damage, data loss or misuse.
+
 ---
 
 ## 🤝 Contributing
@@ -155,7 +200,7 @@ You can also help expand OpenSonix hardware support through the [Amazon wishlist
 
 ---
 
-## 📄 Licence
+## 📄 License
 
 GNU General Public License v3.0
 
