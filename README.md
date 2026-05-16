@@ -220,6 +220,18 @@ If you need to link two sites over the Internet, set up a VPN or MPLS tunnel bet
 - Upgrades currently require reflashing the SD card, then importing a backup
 - OpenSonix is still beta software and should be validated on your own hardware before production use
 
+---
+
+## Roadmap
+
+- Link quality statistics from baresip metrics
+- SNMP monitoring for broadcast supervision systems
+- GPIO contact-closure transport over SIP
+- RS-232 / UART serial control and tunneling
+- Front-panel OLED display support
+- ON AIR LEDs via Raspberry Pi GPIO
+- OTA software updates from the web UI
+
 ### Broadcast disclaimer
 
 OpenSonix is provided without warranty. It is your responsibility to test the system before on-air use, provide backup links where needed, and ensure that your deployment meets your operational, legal and safety requirements. The authors are not responsible for broadcast outages, lost revenue, equipment damage, data loss or misuse.
