@@ -173,19 +173,17 @@ setupcon --force --save-only -v
 # performed through the opensonix user and sudo.
 passwd -l root || true
 
-# Keep the default system password unusable until the web first-login flow sets
-# a strong password for both the UI and the opensonix system user.
-passwd -l opensonix || true
 EOF
 
 # ── SSH hardening ─────────────────────────────────────────────────────────────
-# Allow password auth for the opensonix user once the first-login flow has set
-# a strong system password. Root login stays explicitly disabled.
+# Keep SSH password auth disabled until the web first-login flow has set a
+# strong system password. The physical console can still use opensonix/opensonix
+# as a local recovery path before onboarding.
 mkdir -p "${ROOTFS_DIR}/etc/ssh/sshd_config.d"
 rm -f "${ROOTFS_DIR}/etc/ssh/sshd_config.d/rename_user.conf"
 cat > "${ROOTFS_DIR}/etc/ssh/sshd_config.d/99-opensonix.conf" << 'SSHEOF'
 PermitRootLogin no
-PasswordAuthentication yes
+PasswordAuthentication no
 ChallengeResponseAuthentication no
 KbdInteractiveAuthentication no
 PermitEmptyPasswords no

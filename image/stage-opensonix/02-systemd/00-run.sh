@@ -10,9 +10,9 @@ done
 id -u baresip   &>/dev/null || adduser --system --no-create-home --disabled-login --shell /usr/sbin/nologin --ingroup baresip   baresip
 
 # In CI pi-gen creates this user from FIRST_USER_* before this stage runs,
-# but keep the custom stage self-contained for manual builds as well. The
-# initial password is locked later; the web first-login flow sets the real
-# system password together with the UI password.
+# but keep the custom stage self-contained for manual builds as well. SSH
+# password login stays disabled until the web first-login flow sets a strong
+# system password.
 if ! id -u opensonix &>/dev/null; then
     useradd --create-home --shell /bin/bash --gid opensonix opensonix
 fi

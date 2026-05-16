@@ -136,6 +136,7 @@ jobs:
             | | Username | Password |
             |---|---|---|
             | Web interface | `http://opensonix.local` → `admin` | `opensonix` ⚠ change it |
-            | SSH / physical console | `opensonix` | Set by the first web password change |
+            | Physical console | `opensonix` | `opensonix` ⚠ local recovery before first web login |
+            | SSH password login | `opensonix` | Disabled until the first web password change |
 
           files: ${{ env.IMAGE_PATH }}

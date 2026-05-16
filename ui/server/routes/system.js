@@ -457,7 +457,7 @@ export default async function systemRoutes(fastify) {
 
     // 2. Reset admin password + force change on next login
     try {
-      await setOpenSonixSystemPassword('opensonix')
+      await setOpenSonixSystemPassword('opensonix', { enableSshPassword: false })
     } catch (err) {
       console.error('[system] system password reset skipped:', err.message)
     }

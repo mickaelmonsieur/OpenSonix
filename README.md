@@ -56,6 +56,8 @@ http://opensonix.local
 
 Default web credentials: `admin` / `opensonix` — **you will be asked to change the password on first login.** This also sets the system password for the `opensonix` user used by SSH and the physical console.
 
+Before the first web password change, SSH password login is disabled. The physical console remains available as a local recovery path with `opensonix` / `opensonix`.
+
 ### 3. Configure
 
 - Set the device as **Sender** or **Receiver** in the Config page
@@ -151,7 +153,8 @@ OpenSonix is designed for **closed broadcast networks** (studio LAN, dedicated M
 
 - The web UI uses JWT authentication with a 15-minute access token
 - Brute-force protection is built in and configurable (attempts / window)
-- The default system password is locked until the first web password change
+- SSH password login is disabled until the first web password change
+- The physical console remains available locally with the default password before onboarding
 - Always change the default web password on first login; it also becomes the `opensonix` system password
 
 If you need to link two sites over the Internet, set up a VPN or MPLS tunnel between them first.
